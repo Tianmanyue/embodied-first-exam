@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe-private:gsmini-files-0.1.0@sha256:475bf456a78372825cb433b2feb03f08683fda231d30949c01b34760447a079d",
+ "image": "ghcr.io/mll-lab-nu/efe-private:gsmini-files-0.1.0@sha256:14d7e15bb18f0966ee4ebbcfa5803a5649a30cb30691bc0b69ddcb6fba83309e",
  "source": "embodied_first_exam/benchmarks/gsmini",
  "files": {
   "gsmini_tasks/__init__.py": "2313ee9d0c9b9c8ecff9e22acee5a711f16d9a9c71a33c410594b340987ab78d",
@@ -105,7 +105,7 @@
   "gsmini_tasks/backends/__init__.py": "462846a804f260b137ffafdcb2573c7b95b75fc73f6818a2a95ccad661c13065",
   "gsmini_tasks/backends/curobo_planner.py": "ce76edf092204f3b4af515e0bbeb51ace2c2a0776679c8ddfbd6fbb6a092e224",
   "gsmini_tasks/backends/ik_pink.py": "9b213696b7855c72af6d906608838c7a48828f6c5773d6ffa5990ea185f1b263",
-  "gsmini_tasks/backends/isaaclab_scene.py": "51d3718babd3d841b1403f2bb5d52c213a2d1cd33435421737d935c0af076d5e",
+  "gsmini_tasks/backends/isaaclab_scene.py": "93021d68096aaa69bec6fb1409aff87b767d6ceaf263ee8b05ac72b21aa6fd77",
   "gsmini_tasks/backends/newton_client.py": "3d1965e44681b7fc08b8842287fb3a8512a35452d2655bad4efa05616550c9c6",
   "gsmini_tasks/backends/robot.py": "fa582a20099d9b7880bc145edf547819142b0a3302d2998ce6afc77f16970328",
   "gsmini_tasks/core/__init__.py": "d7fee3d9cae5731eca08ac1385a9e28388995de7bd4ff65c169f0405a6d66354",
@@ -218,7 +218,7 @@
   "gsmini_tasks/tasks/square_table/__init__.py": "1ad804deadf3f234fe3a8a08929375a428fc6dc9881bdf738d147a21cd61e46d",
   "gsmini_tasks/tasks/square_table/cfg.yaml": "9092f83816ba8c9343df8459930f9d77703faf81b417e7a0a3067b2c999995bc",
   "gsmini_tasks/tasks/square_table/task.py": "574b11a84a12fb2cf678affaea6f901077892052d1f33166fcba4db037c2eb89",
-  "rcb_gsmini.py": "998c996bc4a19a5fc7e0e630fd5b3aeb30cd93de074e3d3e7c89a8da4edd99a1",
+  "rcb_gsmini.py": "b6453530ba05e675b4a03f169a63b2e437b4e0d426b75f655c82b6b4817e7446",
   "sidecar/__init__.py": "4498cd317664d71a9a52fc6fb7916ace4db93e9c660a3e1a0b2e715162eb1628",
   "sidecar/host.py": "e6ae21e67d16343f03301facf31da942a7c866ea6ebd6df93fe354e7736cd0f5",
   "sidecar/protocol.py": "90511641132b45d32c65466ce09c8add5208b53ca9d585e323a16635ae2e1916",

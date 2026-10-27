@@ -752,13 +752,14 @@ class InsertSkill(SkillBase):
             line_ok = p["release_depth_line"] is not None and self._depth_line_settle >= int(p["release_dwell_steps"])
             stop_ok = stop_band is not None and p["release_seated_free"] and (self._eef_stop_hit or self._depth_max >= stop_band)
             if seated or line_ok or stop_ok:
-                if stop_band is not None and self._release_settle < int(p["release_dwell_steps"]):
+                pressed_out = self._insert_step >= int(p["insert_max_steps"])  # held at the stop for the whole insert budget
+                if stop_band is not None and self._release_settle < int(p["release_dwell_steps"]) and not pressed_out:
                     if self._insert_step % 60 == 0:
                         self.log(f"pressing to the stop: depth {signed_live * 1e3:+.2f} mm, peak {self._depth_max * 1e3:+.2f} mm, release band >= {stop_band * 1e3:.2f} mm")
                     return act  # gate open, but the bottom dwell is not met yet
                 why = "seated" if seated else (f"past the {float(p['release_depth_line']) * 1e3:.1f} mm line" if line_ok else "at the stop")
                 if stop_band is not None:
-                    why += f" (dwelt {self._release_settle} ticks within the stop band)"
+                    why += f" (dwelt {self._release_settle} ticks within the stop band)" if not pressed_out else " (pressed at the stop for the whole insert budget)"
                 self._begin_open(f"{why} at depth {signed_live * 1e3:.1f} mm")
                 self.run_sub(Gripper("open", "right", timeout=30), obs, obs_info)
                 return self.sub_step(obs, obs_info)

@@ -85,7 +85,7 @@ insert:
   insert_stop_depth: 0.043
   seat_margin: 0.039
   insert_descent_substeps: 80
-  insert_max_steps: 1500
+  insert_max_steps: 9000               # the CPU pipeline pushes the tube down the bore slowly (about 0.3 mm per second)
   lateral_follow: true
   lateral_follow_alpha: 0.05
   align_tol_deg: 6.0

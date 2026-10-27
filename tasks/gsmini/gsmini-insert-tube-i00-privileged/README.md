@@ -33,13 +33,13 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | GPU memory | 6.5 GB | 6.5 GB |
 
 - GPU: required, an RTX-class NVIDIA GPU (ray-tracing cores, for Isaac Sim / Omniverse RTX rendering); recommended: L40S 48GB / L4 24GB / RTX 4090 24GB.
-- Measured: author estimate: one Isaac Sim 5.1 process (PhysX on the CPU, RTX rendering) took 8-10 GB of host memory and 4-6 GB of GPU memory in the author's runs; limits as for the other Isaac Sim 5.1 privileged tasks; to be re-measured
-- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), every container of the trial: 24 GiB GPU memory, 24 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 24 GiB GPU memory, 24 GiB memory. Limits measured: author estimate: one Isaac Sim 5.1 process (PhysX on the CPU, RTX rendering) took 8-10 GB of host memory and 4-6 GB of GPU memory in the author's runs; limits as for the other Isaac Sim 5.1 privileged tasks; to be re-measured.
+- Measured: author estimate: one Isaac Sim 5.1 process (PhysX on the GPU, RTX rendering) took 8-10 GB of host memory and 4-6 GB of GPU memory in the author's runs; limits as for the other Isaac Sim 5.1 privileged tasks; to be re-measured
+- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), every container of the trial: 24 GiB GPU memory, 24 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 24 GiB GPU memory, 24 GiB memory. Limits measured: author estimate: one Isaac Sim 5.1 process (PhysX on the GPU, RTX rendering) took 8-10 GB of host memory and 4-6 GB of GPU memory in the author's runs; limits as for the other Isaac Sim 5.1 privileged tasks; to be re-measured.
 
 ## Details
 | | |
 |---|---|
-| Simulator | GSMini tasks on Isaac Lab 2.3.2 / Isaac Sim 5.1 (PhysX on the CPU, RTX rendering), X-Trainer with two GelSight Mini sensors (taxel raycast + Taxim look-up table) |
+| Simulator | GSMini tasks on Isaac Lab 2.3.2 / Isaac Sim 5.1 (PhysX on the GPU, RTX rendering), X-Trainer with two GelSight Mini sensors (taxel raycast + Taxim look-up table) |
 | Task | `insert_tube`; the frozen instance (the scene state after reset, with its hash) is `environment/instance.json` |
 | Image | built locally on every host (`images/gsmini/BUILD_ONLY`: it contains Isaac Sim); needs an RTX-class NVIDIA GPU (`environment/docker-compose.yaml`) |
 | Budget | the agent's cutoff is the `Agent time budget` row above (this task's `[agent] timeout_sec`); every Python process pays ~1 min of Isaac Sim launch + scene build (tasks/gsmini/README.md) |

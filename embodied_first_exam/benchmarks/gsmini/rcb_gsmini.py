@@ -5,10 +5,11 @@ Same shape as the other benchmarks' rcb_*.py tools.
 
 Concepts
 --------
-instance   : one task in its fixed nominal scene (`seed`), the physics device it is frozen on (`device`, the CPU: PhysX on the
-             GPU does not replay bit for bit across processes) and the hash of the full scene state after reset
-             (`state_sha`: robot joint positions / velocities and every object's pose and velocity). On load,
-             `instance_exact` = hash equality and `instance_matches` = equality or every number within 2e-3.
+instance   : one task in its fixed nominal scene (`seed`), the physics device it is frozen on (`device`: PhysX on the GPU,
+             as the tasks were developed; a fresh process replays a rigid scene bit for bit on the same machine) and the hash of the full scene state after reset (`state_sha`: robot joint
+             positions / velocities, every rigid object's pose and velocity, the deformable body's particles). On load,
+             `instance_exact` = hash equality and `instance_matches` = equality, or the robot and the rigid objects within
+             2e-3 (a deformable body simulated on the GPU settles to slightly different particle positions).
 trajectory : the (T, 18) rows handed to the robot, one per control step (60 Hz: physics 1/120 s, decimation 2):
                0-6   right end-effector target  x y z qw qx qy qz   (env frame, metres; the tactile gripper)
                7-13  left end-effector target   x y z qw qx qy qz
@@ -61,7 +62,8 @@ import numpy as np
 ACTION_DIM = 22
 MAX_STEPS = 30000
 SETTLE_STEPS = 60
-DEVICE = os.environ.get("RCB_GSMINI_DEVICE", "cpu")
+DEVICE = os.environ.get("RCB_GSMINI_DEVICE", "cuda:0")  # PhysX on the GPU, as the tasks were developed (rendering and tactile on the GPU too)
+os.environ.setdefault("GSMINI_ENHANCED_DETERMINISM", "0")  # the physics settings the tasks were developed with
 _APP = None
 
 
@@ -158,6 +160,11 @@ class Session:
         st.pop("_task", None)
         return _flat(st)
 
+    def _core_state(self) -> np.ndarray:
+        """Robot and rigid objects only (the instance tolerance check)."""
+        st = dict(self.task.get_state())
+        return _flat({k: v for k, v in st.items() if k.startswith("robot") or k == "objects"})
+
     def state_sha(self) -> str:
         return hashlib.sha1(self._state().tobytes()).hexdigest()
 
@@ -173,9 +180,10 @@ class Session:
         if self.resets == 0:  # the instance is checked on the first reset of the process (later resets are not bit-exact)
             want = self.instance.get("state_sha")
             self.instance_exact = (want is None) or (want == self.reset_sha)
-            ref = self.instance.get("state")
+            ref = self.instance.get("core_state")
+            c0 = self._core_state()
             self.instance_matches = self.instance_exact or (
-                ref is not None and len(ref) == s0.size and float(np.max(np.abs(np.asarray(ref) - s0))) <= 2e-3)
+                ref is not None and len(ref) == c0.size and float(np.max(np.abs(np.asarray(ref) - c0))) <= 2e-3)
 
     # ------------------------------------------------------------------ actions
     def _action(self, row):
@@ -380,7 +388,7 @@ def main(argv=None) -> int:
         if a.cmd == "make-instance":
             s = Session(a.task, seed=a.seed, tactile=False)
             st = s._state()
-            inst = {"task": a.task, "seed": a.seed, "device": s.device, "state_sha": s.reset_sha, "state": st.tolist()}
+            inst = {"task": a.task, "seed": a.seed, "device": s.device, "state_sha": s.reset_sha, "core_state": s._core_state().tolist()}
             Path(a.out).write_text(json.dumps(inst, indent=1) + "\n")
             print(json.dumps({"task": a.task, "state_sha": s.reset_sha}), flush=True)
         elif a.cmd == "replay":

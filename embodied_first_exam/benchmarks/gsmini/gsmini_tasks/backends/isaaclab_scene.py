@@ -99,6 +99,8 @@ class SceneCfg:
     physx_friction_correlation: float = 0.0005
     physx_min_position_iters: int = 20
     physx_min_velocity_iters: int = 1
+    enhanced_determinism: bool = bool(int(__import__("os").environ.get("GSMINI_ENHANCED_DETERMINISM", "0")))
+    """PhysX enhanced determinism (also on the GPU pipeline: replays end in the same state; slightly slower)."""
 
     @property
     def control_dt(self) -> float:
@@ -166,6 +168,7 @@ class IsaacLabScene:
                 friction_correlation_distance=c.physx_friction_correlation,
                 min_position_iteration_count=c.physx_min_position_iters,
                 min_velocity_iteration_count=c.physx_min_velocity_iters,
+                enable_enhanced_determinism=bool(c.enhanced_determinism),
             ),
         )
         self.sim = SimulationContext(sim_cfg)

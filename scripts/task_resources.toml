@@ -3226,7 +3226,7 @@ recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
 verifier_min_cpus = 4.0
 verifier_min_memory_gb = 13.0
 verifier_min_gpu_memory_gb = 6.5
-measured = "author estimate: one Isaac Sim 5.1 process (PhysX on the CPU, RTX rendering) took 8-10 GB of host memory and 4-6 GB of GPU memory in the author's runs; limits as for the other Isaac Sim 5.1 privileged tasks; to be re-measured"
+measured = "author estimate: one Isaac Sim 5.1 process (PhysX on the GPU, RTX rendering) took 8-10 GB of host memory and 4-6 GB of GPU memory in the author's runs; limits as for the other Isaac Sim 5.1 privileged tasks; to be re-measured"
 
 # gsmini, privileged (author estimate from the RoboLab tasks on the same Isaac Sim 5.1 stack; to be re-measured)
 [[limit]]
@@ -3242,7 +3242,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 24.0
 trial_max_memory_gb = 24.0
-measured = "author estimate: one Isaac Sim 5.1 process (PhysX on the CPU, RTX rendering) took 8-10 GB of host memory and 4-6 GB of GPU memory in the author's runs; limits as for the other Isaac Sim 5.1 privileged tasks; to be re-measured"
+measured = "author estimate: one Isaac Sim 5.1 process (PhysX on the GPU, RTX rendering) took 8-10 GB of host memory and 4-6 GB of GPU memory in the author's runs; limits as for the other Isaac Sim 5.1 privileged tasks; to be re-measured"
 
 # gsmini, privileged (author estimate from the RoboLab tasks on the same Isaac Sim 5.1 stack; to be re-measured)
 [[cap]]

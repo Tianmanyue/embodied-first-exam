@@ -14,7 +14,7 @@ retry as many times as you want. Your deliverable is **one replayable trajectory
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same initial state in two fresh processes and scored 1 if the task is solved in both replays and both end in the same state, else 0.
+open-loop from the same initial state in one fresh process and scored 1 if the task is solved in the replay, else 0.
 After the last row the replay holds that row for 60 more control steps (1 s) before the task is judged (`s.replay` does
 the same). Also leave the script that produced it at `/app/output/gen.py`. Save a working trajectory as soon as you have
 one and overwrite it as you improve it: whatever is in `/app/output/` when the time is up is graded. The file holds
@@ -46,7 +46,7 @@ Cameras (two wrist cameras): `Session(..., cameras=True)` then `s.render_frame("
 object's `Annotation/` folder holds grasp poses (`grasp_pose.json`: right end-effector poses `[x, y, z, qw, qx, qy, qz]` in
 the object's frame) and insertion geometry (`insertion_pose.json`).
 
-The grader replays in two fresh processes; each is exactly this CLI (a fresh process, so run it to self-check):
+The grader replays in one fresh process, exactly this CLI (a fresh process, so run it to self-check):
 `python /opt/tools/rcb_gsmini.py replay --task dough_press_thickness --instance /app/instance.json --traj /app/output/trajectory.npz`
 
 ## Conventions
@@ -65,11 +65,12 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
   axis. The right gripper opens to about 0.10 m between the gel faces; its width is 0.082 + q(J1_7) - q(J1_8) (m).
 - Control runs at 60 Hz (physics 1/120 s, decimation 2). There is no step budget: the time limit (`## Time limit`) is your
   only budget (a runaway guard ends an episode after 30,000 control steps, the most a trajectory may hold).
-- One `Session` per process. Physics is PhysX on the **CPU** (the GPU pipeline does not replay bit for bit), rendering on
-  the GPU. The first episode of a process (a live run before any `s.reset()`, or the first `s.replay()`) ends in the same
-  state as the grader's fresh-process replay of the same rows. After `s.reset()` the state is restored but not every
-  PhysX internal, so a run recorded after a reset can end differently: record the final trajectory from the first
-  episode of a fresh process and check it with the CLI replay above.
+- One `Session` per process. Physics is PhysX on the **GPU**, as are rendering and the tactile raycast. Replaying the
+  same rows in a fresh process (the CLI above, as the grader does) ends in the same state every time on a machine, but
+  that state can differ slightly from the live run that recorded the rows, and after `s.reset()` the state is restored
+  but not every PhysX internal. So check the final trajectory with the CLI replay, and leave a margin on the success
+  thresholds rather than ending a hair past them. Deformable bodies (where a task has one) are simulated by a Newton
+  sidecar on the GPU, whose replays agree closely but not bit for bit.
 
 The dough (implicit MPM) or the plug (FEM) is simulated by Newton in a sidecar process started by the Session; only the gel pads (or the tool) act on it. Widths below are measured in the plate frame (origin at the plate top centre (0.08, 0, 1.112), x across the bar, y along it): at each 4 mm slice along y, the width is the 2nd-to-98th percentile extent in x of the particles between 16 and 24 mm above the plate (within 30 mm of the bar axis), plus the particle spacing; a slice with fewer than 5 particles fails.
 
