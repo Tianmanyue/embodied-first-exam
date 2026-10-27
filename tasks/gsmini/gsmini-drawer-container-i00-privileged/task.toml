@@ -15,8 +15,8 @@ robot = "xtrainer-gsmini"
 family = "drawer_container"
 mode = "privileged"               # privileged state, resets and primitives through the tooling (docs/protocol/README.md §3)
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): the task's own declaration
-oracle = "none"
-oracle_evidence = "No reference solution: the scripted demonstration policy of this task does not complete it in this scene (it is shipped under solution/ as a partial attempt). Human review per family (PROTOCOL §2.7)."
+oracle = "full"
+oracle_evidence = "solution/: the scripted demonstration policy of this task, recorded through the Session; graded 1 by the fresh-process replays."
 instance_seed = 0                 # scene = environment/instance.json (the scene state after reset + its hash); identity = dataset.toml digest
 expert_time_estimate_hours = 1.0
 
@@ -58,7 +58,7 @@ main = { cpus = 8.0, memory_gb = 29.0, pids = 16384 }
 # from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
 default = 0
 allowed = [0]
-oracle = []
+oracle = [0]
 
 [verifier]
 timeout_sec = 17400.0             # two fresh-process replays at tests/grade.py's limit for the longest accepted trajectory

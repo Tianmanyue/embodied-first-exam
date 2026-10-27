@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe-private:gsmini-files-0.1.0@sha256:14d7e15bb18f0966ee4ebbcfa5803a5649a30cb30691bc0b69ddcb6fba83309e",
+ "image": "ghcr.io/mll-lab-nu/efe-private:gsmini-files-0.1.0@sha256:dfe9a3b71105edf808c72474b759c77b08853af0b71487287fdd2c696c7fc141",
  "source": "embodied_first_exam/benchmarks/gsmini",
  "files": {
   "gsmini_tasks/__init__.py": "2313ee9d0c9b9c8ecff9e22acee5a711f16d9a9c71a33c410594b340987ab78d",
@@ -183,7 +183,7 @@
   "gsmini_tasks/tasks/dough_target_shape/cfg.yaml": "dbef826219c1147274dea2b58dd3cef9944e17725ae4dc4e9fbe5e5c7d25d874",
   "gsmini_tasks/tasks/dough_target_shape/task.py": "526f7d0e99edd68e381dd58182d23ea4b57eed71899956841062d800fd194c50",
   "gsmini_tasks/tasks/drawer_container/__init__.py": "4977c6078a564973deb9e6870f3c510833cd6aa82d2a9c9a4e4af7adcc1a9deb",
-  "gsmini_tasks/tasks/drawer_container/cfg.yaml": "ea92beb8ec39f13c0617778142c76d248b2762a42a7cf04cb36a3d2fc110bd80",
+  "gsmini_tasks/tasks/drawer_container/cfg.yaml": "4ebdc7d2d76292b19ef4516f13ca90b3754c869971669c3cd71477a1a66fbbae",
   "gsmini_tasks/tasks/drawer_container/task.py": "78b5dca0ef4178e7f5e320e491bd34fa2525cc9cfddd0ab1a5d7543011266b0d",
   "gsmini_tasks/tasks/fem_plug_insert/__init__.py": "6b31936b11532a376bfedfa10390d0b2234e92c8e42fa4fa06711e75235bbcaa",
   "gsmini_tasks/tasks/fem_plug_insert/cfg.yaml": "cc29321d9b7112dfc6eda6aa6441f3f78077eb983f9fe33c89f29a64b6a553d6",

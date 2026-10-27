@@ -1549,6 +1549,66 @@ class ExtractSkill(SkillBase):
         return self.act(cmd, GRIPPER_CLOSE)
 
 
+# --------------------------------------------------------------------------- joint-space moves
+class JointInterpPlanner:
+    """Joint-space move of the right arm, streamed as end-effector targets.
+
+    The goal joints come from an offline Pink IK solve seeded with the current joints,
+    each continuous joint wrapped into [-pi, pi] (an unwound wrist), so the arm takes
+    the short way round instead of winding a joint into its limit; the move is a
+    linear interpolation in joint space, and every row is the forward kinematics of
+    the interpolated joints (the action rows stay end-effector targets).
+    """
+
+    WRAP = (0, 3, 4, 5)  # right-arm joints with +-2pi travel (J1_1, J1_4, J1_5, J1_6)
+
+    def __init__(self, base_pose: np.ndarray, joint_speed: float = 0.8, iters: int = 800, tol=(0.001, 0.005)):
+        from ..backends.ik_pink import PinkIK
+
+        self.ik = PinkIK()
+        self.base = np.asarray(base_pose, dtype=np.float64).reshape(7)
+        self.joint_speed = float(joint_speed)
+        self.iters = int(iters)
+        self.tol = (float(tol[0]), float(tol[1]))
+
+    def _solve(self, seed: np.ndarray, goal_base: np.ndarray):
+        q = seed.copy()
+        self.ik.reset(q)
+        err = (1.0, 1.0)
+        for i in range(self.iters):
+            q = self.ik.solve(q, [goal_base, None])
+            if i % 20 == 19:
+                err = m.pose_error(self.ik.fk(q, "J1_6"), goal_base)
+                if err[0] < self.tol[0] and err[1] < self.tol[1]:
+                    break
+        return q, err
+
+    def plan(self, q0, ee_current, ee_targets, **kwargs):
+        from ..core.planner import PlanResult
+
+        q_now = np.asarray(q0, dtype=np.float64).reshape(-1)[:12].copy()
+        goal_base = m.pose_relative(self.base, np.asarray(ee_targets[0], dtype=np.float64).reshape(7))
+        seed = q_now.copy()
+        seed[list(self.WRAP)] = (seed[list(self.WRAP)] + math.pi) % (2.0 * math.pi) - math.pi
+        best = None
+        for s in (seed, q_now):
+            q, err = self._solve(s, goal_base)
+            if err[0] < 5 * self.tol[0] and err[1] < 5 * self.tol[1]:
+                cost = float(np.abs(q[:6] - q_now[:6]).max())
+                if best is None or cost < best[1]:
+                    best = (q, cost)
+        if best is None:
+            return PlanResult(False, np.zeros((0, 14)), info={"planner": "joint_interp", "error": "no IK solution"})
+        q_goal = best[0]
+        n = max(30, int(math.ceil(best[1] / (self.joint_speed * CONTROL_DT))))
+        traj = np.full((n, 14), np.nan, dtype=np.float64)
+        for i in range(n):
+            qi = q_now.copy()
+            qi[:6] = q_now[:6] + (q_goal[:6] - q_now[:6]) * (i + 1) / n
+            traj[i, :7] = m.pose_compose(self.base, self.ik.fk(qi, "J1_6"))
+        return PlanResult(True, traj, None, CONTROL_DT, {"planner": "joint_interp", "steps": n, "max_joint_move": best[1]})
+
+
 # --------------------------------------------------------------------------- push
 PUSH_DEFAULTS: Dict[str, Any] = {
     "axis": 0,
@@ -1571,6 +1631,7 @@ PUSH_DEFAULTS: Dict[str, Any] = {
     "approach_speed": 0.1,
     "hop_tol": 0.008,
     "track_print_every": 60,
+    "joint_approach": False,
 }
 
 
@@ -1698,6 +1759,10 @@ class PushSkill(SkillBase):
         target = self._prepush.copy()
         target[:3] = target[:3] - self._dir * float(self.p["approach_back"]) + np.array([0.0, 0.0, float(self.p["approach_raise"])])
         self.set_state("approach", f"raised staging {np.round(target[:3], 4).tolist()}")
+        if self.p["joint_approach"]:  # joint-space approach: the wrist unwinds instead of jamming at a joint limit
+            planner = JointInterpPlanner(self.task.scene.base_pose)
+            self.run_sub(MoveL(target, "right", mode="motiongen", planner=planner, steps=int(self.p["approach_steps"]), speed=float(self.p["approach_speed"]), converge=True, tol=(0.01, 0.05), timeout=900, name="push_approach_joint"), obs, info)
+            return
         self.run_sub(MoveL(target, "right", steps=int(self.p["approach_steps"]), speed=float(self.p["approach_speed"]), converge=True, tol=(0.01, 0.05), timeout=600, name="push_approach"), obs, info)
 
     def _begin_prepush(self, obs, info) -> None:

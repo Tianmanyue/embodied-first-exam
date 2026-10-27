@@ -60,9 +60,9 @@ WORKDIR /app
 # the gsmini_tasks package as the agent may read it (no scripted policies, no expert parameters) and the tooling.
 FROM gsmini-base
 COPY instance.json /app/instance.json
-COPY --from=ghcr.io/mll-lab-nu/efe-private:gsmini-files-0.1.0@sha256:14d7e15bb18f0966ee4ebbcfa5803a5649a30cb30691bc0b69ddcb6fba83309e /gsmini_tasks /opt/gsmini/gsmini_tasks
-COPY --from=ghcr.io/mll-lab-nu/efe-private:gsmini-files-0.1.0@sha256:14d7e15bb18f0966ee4ebbcfa5803a5649a30cb30691bc0b69ddcb6fba83309e /sidecar /opt/gsmini/sidecar
-COPY --from=ghcr.io/mll-lab-nu/efe-private:gsmini-files-0.1.0@sha256:14d7e15bb18f0966ee4ebbcfa5803a5649a30cb30691bc0b69ddcb6fba83309e /rcb_gsmini.py /opt/tools/rcb_gsmini.py
+COPY --from=ghcr.io/mll-lab-nu/efe-private:gsmini-files-0.1.0@sha256:dfe9a3b71105edf808c72474b759c77b08853af0b71487287fdd2c696c7fc141 /gsmini_tasks /opt/gsmini/gsmini_tasks
+COPY --from=ghcr.io/mll-lab-nu/efe-private:gsmini-files-0.1.0@sha256:dfe9a3b71105edf808c72474b759c77b08853af0b71487287fdd2c696c7fc141 /sidecar /opt/gsmini/sidecar
+COPY --from=ghcr.io/mll-lab-nu/efe-private:gsmini-files-0.1.0@sha256:dfe9a3b71105edf808c72474b759c77b08853af0b71487287fdd2c696c7fc141 /rcb_gsmini.py /opt/tools/rcb_gsmini.py
 ENV PYTHONPATH=/opt/tools:/opt/gsmini
 RUN mkdir -p /app/output
 WORKDIR /app

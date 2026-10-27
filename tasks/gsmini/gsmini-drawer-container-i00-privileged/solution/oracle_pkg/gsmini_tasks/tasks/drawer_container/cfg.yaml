@@ -46,6 +46,8 @@ parts:                              # working order; the judge needs every part 
     screw: false
     push: true
     push_target: 0.165
+    joint_approach: true            # the push approach in joint space: after this grasp the wrist sits at its -2pi
+                                    # limit and a straight end-effector move jams the arm 0.1 m short of the staging
 
 success:
   assembled_margin: 0.012           # per part: slide depth >= rail length (0.089) - margin

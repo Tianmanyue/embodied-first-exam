@@ -7,7 +7,7 @@
 | Twin | — (privileged only) |
 | Simulator / robot | `gsmini` / `xtrainer-gsmini` |
 | Family / instance | `drawer_container` / seed 0 |
-| Oracle | `none` — No reference solution: the scripted demonstration policy of this task does not complete it in this scene (it is shipped under solution/ as a partial attempt). Human review per family (PROTOCOL §2.7). |
+| Oracle | `full` — solution/: the scripted demonstration policy of this task, recorded through the Session; graded 1 by the fresh-process replays. |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe-private:gsmini-0.1.0` |
 
@@ -18,7 +18,7 @@ Slide both containers into the drawer box, each to its back stop.
 Contact-rich manipulation with a tactile gripper, driven through end-effector targets only.
 
 ## Reference solution
-None that succeeds: `solution/` holds the scripted demonstration policy as a partial attempt (`oracle = "none"`).
+`solution/oracle_drawer_container.py`: the scripted demonstration policy, recorded through the Session; `solution/solve.sh` lays the policy code over the package first (the agent's image does not carry it).
 
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes (`tests/grade.py`); pass iff the task's success predicate holds in every replay and the final-state hashes agree, and the rebuilt frozen scene matches the recorded one.

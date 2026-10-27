@@ -27,7 +27,7 @@ from ...rigid.skills import GraspSkill, InsertSkill, PushSkill, ReachSkill
 
 __all__ = ["Policy"]
 
-_PART_PUSH_KEYS = ("push_target", "stage_floor", "axis", "stages")
+_PART_PUSH_KEYS = ("push_target", "stage_floor", "axis", "stages", "joint_approach")
 
 
 def _merge(base: Dict[str, Any], over: Dict[str, Any]) -> Dict[str, Any]:
