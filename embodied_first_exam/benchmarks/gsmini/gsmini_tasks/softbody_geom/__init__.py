@@ -15,12 +15,11 @@ Modules
     dough_scene     MPM particle blobs, pose interpolation
     dough_metrics   column heights, press / fill reports
     dough_task      DoughScene container, press / fill scene builders, tray_boxes
-    dough_pinch     direct-pad dough scenes (pinch ridge, straddle push), pad_tools, pinch_report, pinch_script
-    dough_expert    tool-frame scripts: press_script, pickup_steps, fill_script, plug_script
+    dough_pinch     direct-pad dough scenes (pinch ridge, straddle push), pad_tools, pinch_report
     materials       MPM material presets
     surface         marching-cubes dough surface (needs scipy + scikit-image; Isaac side only)
     tools           dough tool collider descriptions (press, stamp, scraper)
     plug_scene      FEM plug spec, fixture boxes, particle grid, surface triangles, plug_report
-    plug_pad_scene  direct-pad FEM plug scene, plug_pad_report, plug_pad_script
+    plug_pad_scene  direct-pad FEM plug scene, plug_pad_report
     plug_task       carrier-variant FEM plug scene
 """

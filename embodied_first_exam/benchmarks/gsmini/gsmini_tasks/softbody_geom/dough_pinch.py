@@ -203,33 +203,6 @@ def pinch_report(
     return PinchReport(mean, flat, outside, len(widths), 0, not reasons, "; ".join(reasons) or "ok")
 
 
-def pinch_script(plan: Dict, p: Dict) -> List[Dict]:
-    """The pinch-walk in the PAD-PAIR frame (``xyz`` = the pad-pair centre, ``yaw`` = the closing-axis direction): for every pinch centre
-    (``pinch_offsets`` along the ridge): hover above the ridge, descend to the pinch height, close, hold, open, lift; then withdraw.
-    ``plan['anchor']`` is the env-local plate-top point (the ridge centre is relative to it).  Neighbouring pinches must be > 30 mm apart:
-    a pinch next to a freshly pinched, unsupported section lets the dough flow out and the ridge slumps."""
-    anc = np.asarray(plan["anchor"], float)
-    z0 = float(anc[2])
-    cx, cy = float(plan["ridge_cx"]), float(plan["ridge_cy"])
-    z_pinch = z0 + float(p.get("pinch_z", GEL_CENTER_MIN_Z + 0.001))
-    hover = z0 + float(p.get("hover", 0.05))
-    offsets = [float(v) for v in (plan.get("pinch_offsets") or p.get("pinch_offsets", (-0.018, 0.018)))]
-    yaw = float(p.get("closing_yaw", -0.5 * np.pi))  # closing axis along +x: straddle the ridge (it runs along y)
-    steps: List[Dict] = [{"op": "open", "label": "open"}]
-    for k, o in enumerate(offsets):
-        y = cy + o
-        steps += [
-            {"op": "move", "xyz": [anc[0] + cx, anc[1] + y, hover], "yaw": yaw, "label": f"hover{k}"},
-            {"op": "move", "xyz": [anc[0] + cx, anc[1] + y, z_pinch], "yaw": yaw, "label": f"descend{k}"},
-            {"op": "close", "label": f"pinch{k}", **({"stop_width": float(p["stop_width"])} if p.get("stop_width") else {})},
-            # a stopped close: the binary gripper cannot hold a partial width, so the dwell is a bang-bang "hold_width" (close above the width, open below it, every tick)
-            *([{"op": "hold_width", "ticks": int(p.get("stop_hold_ticks", 0)), "width": float(p.get("hold_width", p["stop_width"] - 0.0005)), "label": f"hold{k}"}] if p.get("stop_width") and int(p.get("stop_hold_ticks", 0)) > 0 else []),
-            *([] if p.get("stop_width") else [{"op": "wait", "ticks": int(p.get("hold_ticks", 20)), "label": f"hold{k}"}]),
-            {"op": "open", "label": f"release{k}"},
-            {"op": "move", "xyz": [anc[0] + cx, anc[1] + y, hover], "yaw": yaw, "label": f"lift{k}"},
-        ]
-    steps.append({"op": "move", "xyz": [anc[0] + cx, anc[1] + cy + offsets[-1], z0 + float(p.get("lift_z", 0.09))], "yaw": yaw, "label": "retreat"})
-    return steps
 
 
 # -- fill, DIRECT: straddle-push with the trailing gel pad ------------------------------------------------------------
@@ -261,34 +234,6 @@ def make_fill_push_scene(p: dict, anchor, rng: Optional[np.random.Generator] = N
     return sc
 
 
-def fill_push_script(plan: Dict, p: Dict) -> List[Dict]:
-    """Lanes of straddle pushes in the PAD-PAIR frame: for each lane (y): hover behind the heap, descend (pad 0's gel face 2 mm behind
-    the heap's back), push along +x to the front wall, lift, return.  ``xyz`` = the centre between the pads (open gap 0.106: pad 0 =
-    x - 0.053), closing axis along +x."""
-    anc = np.asarray(plan["anchor"], float)
-    z0 = float(anc[2])
-    gap = float(p.get("open_gap", OPEN_GAP))
-    face_to_mid = 0.5 * gap - PAD_HALF[2]  # pad 0's gel face is this far behind the pair centre
-    x_start = float(plan["back_x"]) - float(p.get("start_behind", 0.002)) + face_to_mid
-    x_end = float(plan["front_x"]) - float(p.get("end_before_wall", 0.004)) + face_to_mid
-    inner_y = float(plan["inner_y"])
-    pad_w = 2.0 * PAD_HALF[1]
-    n = int(p.get("lanes", 4))
-    span = inner_y - pad_w
-    ys = np.linspace(-0.5 * span, 0.5 * span, n) if n > 1 else np.zeros(1)
-    z_push = z0 + float(p.get("push_z", GEL_CENTER_MIN_Z + 0.001))
-    hover = z0 + float(p.get("hover", 0.06))
-    yaw = float(p.get("closing_yaw", -0.5 * np.pi))
-    steps: List[Dict] = [{"op": "open", "label": "open"}]
-    for k, y in enumerate(ys):
-        steps += [
-            {"op": "move", "xyz": [anc[0] + x_start, anc[1] + y, hover], "yaw": yaw, "label": f"hover{k}"},
-            {"op": "move", "xyz": [anc[0] + x_start, anc[1] + y, z_push], "yaw": yaw, "label": f"lower{k}"},
-            {"op": "move", "xyz": [anc[0] + x_end, anc[1] + y, z_push], "yaw": yaw, "label": f"push{k}"},
-            {"op": "move", "xyz": [anc[0] + x_end, anc[1] + y, hover], "yaw": yaw, "label": f"lift{k}"},
-        ]
-    steps.append({"op": "move", "xyz": [anc[0] + x_end, anc[1] + float(ys[-1]), z0 + float(p.get("lift_z", 0.09))], "yaw": yaw, "label": "retreat"})
-    return steps
 
 
 def grid_box_mesh(center, n_axis, y_axis, z_axis, size, cell=0.002):

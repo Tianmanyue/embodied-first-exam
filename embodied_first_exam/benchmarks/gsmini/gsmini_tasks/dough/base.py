@@ -18,6 +18,8 @@ direct mode), ``dough_top`` (nx, ny) float32 column-top height map over the task
 
 from __future__ import annotations
 
+import math
+
 import time
 from typing import Any, Dict, List, Optional
 
@@ -35,6 +37,18 @@ from .scene import build_dough_scene, build_scene, make_scene, tool_start_pose
 REACTION_CLIP_N = 50.0
 """The dough force fed back to the PhysX tool is clipped to this per axis."""
 
+
+
+def grip_to_tool(tool_kind: str, eef_to_grip, tool_yaw_deg: float = 0.0):
+    """Tool frame in the end-effector frame ``(pos, quat wxyz)``: the tool points opposite to the gripper's approach axis
+    (180 degrees about x), yawed about its own z, held ``GRIP_Z`` above its working face at the pads' grip point."""
+    from ..softbody_geom import tools as tl
+
+    flip = np.array([0.0, 1.0, 0.0, 0.0])
+    yaw = float(np.deg2rad(tool_yaw_deg))
+    q = m.quat_normalize(m.quat_mul(flip, np.array([math.cos(0.5 * yaw), 0.0, 0.0, math.sin(0.5 * yaw)])))
+    pos = np.asarray(eef_to_grip, dtype=np.float64) + np.array([0.0, 0.0, tl.GRIP_Z[str(tool_kind)]])
+    return pos, q
 
 class DoughTask(Task):
     """Base of the four dough / plug tasks.  Subclasses set :attr:`kind` and implement :meth:`judge` /
@@ -238,8 +252,6 @@ class DoughTask(Task):
 
     def tool_pose_in_gripper(self) -> np.ndarray:
         """Where the (open) gripper holds the tool: the nominal grip transform applied to the current end-effector pose."""
-        from .script import grip_to_tool
-
         pos, q = grip_to_tool(str(self.p.get("tool_kind", "scraper_tool")), self.p.get("eef_to_grip", (0.0, 0.0, 0.177)), float(self.p.get("tool_yaw_deg", 0.0)))
         return m.pose_compose(self.scene.ee_pose(0), np.concatenate([pos, q]))
 

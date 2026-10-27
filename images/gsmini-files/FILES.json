@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe-private:gsmini-files-0.1.0@sha256:9f1814a9610ec871088bc50db5ada1f2dcb78be2db5e5e478dd50f2aa685c1f1",
+ "image": "ghcr.io/mll-lab-nu/efe-private:gsmini-files-0.1.0@sha256:ef856fbf2540d16a1ff7d8f2d961b081b5ef9375319b40a43fce5d1375e7a6e1",
  "source": "embodied_first_exam/benchmarks/gsmini",
  "files": {
   "gsmini_tasks/__init__.py": "2313ee9d0c9b9c8ecff9e22acee5a711f16d9a9c71a33c410594b340987ab78d",
@@ -116,7 +116,7 @@
   "gsmini_tasks/core/task.py": "eb388208debf868c9852bef842010b09909537cdcc8ffc476cd8371635f89a7e",
   "gsmini_tasks/core/types.py": "4c6253676ad100e5d217637156d38e538f753a30023245b489b63dc56a0423ef",
   "gsmini_tasks/dough/__init__.py": "185e236f7abdf3b4ce44601755381b66ec4550d6ea90f3105a491a300f32d5d8",
-  "gsmini_tasks/dough/base.py": "abf86c4e8827ba4e04cae6c811938d6229de015e3555b1e00c5afd08653d4924",
+  "gsmini_tasks/dough/base.py": "787f795f4db63d2d0b0014420365757823b0519e48d3e98988be2e57ef538691",
   "gsmini_tasks/dough/pads.py": "d9e665d48062dd45062296c1bfaf86e2aef6b236a315396f72aa7407ab8b74c7",
   "gsmini_tasks/dough/scene.py": "33af7000d90b1df67df5011b77d364844630e3e0d2014164c0598166dabf6302",
   "gsmini_tasks/dough/tactile.py": "a65801c6961f07b3a6b4fb753a5f1e59a84eb9ceb4872508d9599a00abd7d1dd",
@@ -130,14 +130,13 @@
   "gsmini_tasks/soft/cables.py": "b98ac2f8d2f0369fbf87bed2b7444942bebfae943b7996f52d2bf563b667be4e",
   "gsmini_tasks/soft/kinematic_hand.py": "8c48fd3b5547eaf3ab8bc0abc15e798b69cb3f8e9f2502368a80b612ddbff5d2",
   "gsmini_tasks/soft/metrics.py": "f46d63d96ce5f67e74025c250f5889459ede2958bd350b89a50cba0b2f0e3127",
-  "gsmini_tasks/softbody_geom/__init__.py": "f1c6d5ab771a9954ea8768f821bce28680d2ccc34bab377d05069216efe1c12d",
-  "gsmini_tasks/softbody_geom/dough_expert.py": "130f856b22541bd2f1f263f5c5f57563e6ab4b2061f7af110f90565171da75cf",
+  "gsmini_tasks/softbody_geom/__init__.py": "1cf6132e3b82fc5a6c26c8ac9b302b1f9cb9464ad5caadf295ef474641735527",
   "gsmini_tasks/softbody_geom/dough_metrics.py": "9d219659c63b3d16252cfa898973ea219f48662e62bdfccca6fe295754e81ce1",
-  "gsmini_tasks/softbody_geom/dough_pinch.py": "2386ee7936cdb63753fadb312c27514a06d00a101ae718fb5afc6fb385c5bfe0",
+  "gsmini_tasks/softbody_geom/dough_pinch.py": "2b524f5e768d87095e1a1ca468caf1e1d414d0de982b4c8a0eb671ac7ffaf724",
   "gsmini_tasks/softbody_geom/dough_scene.py": "ff53c3a36743fafd9c0d0153b414f108fe24f26de41ebc542eadb025a5659b1b",
   "gsmini_tasks/softbody_geom/dough_task.py": "f90c0a9fea28e217f36ada178dd53f82afe324cfefa5d23a285671129fc1fb9b",
   "gsmini_tasks/softbody_geom/materials.py": "c79194a750e2ac10524d7a212e91f2c4e300297e7b45bb0be015ccbe6443e87d",
-  "gsmini_tasks/softbody_geom/plug_pad_scene.py": "53b8be597bb477f23b7d7ff9897eb1dd32fab1ec971f73fe49948b30725ec007",
+  "gsmini_tasks/softbody_geom/plug_pad_scene.py": "9b07870987feb776bdb5c38cf6e14b5d218ad70ef46664df4678ee8b1bc59588",
   "gsmini_tasks/softbody_geom/plug_scene.py": "362442fb5f2ca6a29129f319633f7c2f4544bfef86f76c67a0631c21bfa457fe",
   "gsmini_tasks/softbody_geom/plug_task.py": "0496d6119d9e65f31ef93e86d8f2aeb5eebf74facb535ab3ce000ff732b01e32",
   "gsmini_tasks/softbody_geom/soft_scenes.py": "ec51257e83db0358745dfa64ec9f05d12c33f562c10c6583934091f5e1227f8d",
@@ -219,6 +218,16 @@
   "gsmini_tasks/tasks/square_table/__init__.py": "1ad804deadf3f234fe3a8a08929375a428fc6dc9881bdf738d147a21cd61e46d",
   "gsmini_tasks/tasks/square_table/cfg.yaml": "9092f83816ba8c9343df8459930f9d77703faf81b417e7a0a3067b2c999995bc",
   "gsmini_tasks/tasks/square_table/task.py": "574b11a84a12fb2cf678affaea6f901077892052d1f33166fcba4db037c2eb89",
-  "rcb_gsmini.py": "1e29540a5d86b4df9f7749b9a7d2df34097ff9009b8727592739266a61675dba"
+  "rcb_gsmini.py": "96d70e443ff3e4fb7b09619017f9042fdaf61ce8e0b4d875bbb9979dc0babfa1",
+  "sidecar/__init__.py": "4498cd317664d71a9a52fc6fb7916ace4db93e9c660a3e1a0b2e715162eb1628",
+  "sidecar/host.py": "e6ae21e67d16343f03301facf31da942a7c866ea6ebd6df93fe354e7736cd0f5",
+  "sidecar/protocol.py": "90511641132b45d32c65466ce09c8add5208b53ca9d585e323a16635ae2e1916",
+  "sidecar/requirements.txt": "015a40ded480801b9157d29b1977d3d1b550da071fb6370fc8558d6f8b9c7d2a",
+  "sidecar/server.py": "20857ed7b3aee9ba0afdfe46e12bc87229d30742204a7d9fab4402f65186648c",
+  "sidecar/services.py": "5343ac77b2818f27617735b4065b8bc736807ffc98b82dd930185fbee50b24d6",
+  "sidecar/worlds/__init__.py": "2f54b40cbf20d7f55eb4313d39c17643cd1870499f10fb93576ecf4c33b0af87",
+  "sidecar/worlds/fem.py": "9296ad76ba5b5bc7aa081fb5b1df27b750f31f1d278d326cdd5ebf0354545cf5",
+  "sidecar/worlds/mpm.py": "d6b4da4b814c76025a138b567c033a2201faba9795a18010fee35367cdba5c8c",
+  "sidecar/worlds/softbody.py": "6cb09ca851a89b3a1c95a4ca3e69f2982741fdc90c353f93fa8eac7f2fd98493"
  }
 }

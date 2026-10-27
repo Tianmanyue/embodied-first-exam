@@ -148,30 +148,3 @@ def plug_pad_report(
     return PlugPadReport(depth, seated, wx, comp, tilt, 1e3 * off, not why, "; ".join(why) or "ok")
 
 
-def plug_pad_script(plan: Dict, p: Dict) -> List[Dict]:
-    """Pick the plug from the socket with the gel pads, carry it, seat it in the target hole, release, withdraw (pad-pair frame:
-    ``xyz`` = centre between the pads, ``yaw`` = closing axis; -pi/2 = along +x).  Pad centre = surface + ``grip_h`` (21 mm: the
-    fingertips clear the plate / rim) at both the pick and the seat."""
-    anc = np.asarray(plan["anchor"], float)
-    z0 = float(anc[2])
-    grip_h = float(p.get("grip_h", 0.021)) + float(p.get("grip_bias", 0.001))
-    hover = z0 + float(p.get("hover", 0.07))
-    lift = z0 + float(p.get("lift_h", 0.06))
-    yaw = float(p.get("closing_yaw", -0.5 * np.pi))
-    px, py = anc[0] + float(plan["pick_x"]), anc[1] + float(plan["pick_y"])
-    tx, ty = anc[0] + float(plan["hole_x"]), anc[1] + float(plan["hole_y"])
-    seat = float(p.get("seat_z", 0.0))  # extra push below the grip height (0: the plug bottom reaches the socket floor at grip_h)
-    return [
-        {"op": "open", "label": "open"},
-        {"op": "move", "xyz": [px, py, hover], "yaw": yaw, "label": "hover_pick"},
-        {"op": "move", "xyz": [px, py, z0 + grip_h], "yaw": yaw, "label": "descend_pick"},
-        {"op": "close", "label": "pinch"},
-        {"op": "wait", "ticks": int(p.get("hold_ticks", 20)), "label": "grip"},
-        {"op": "move", "xyz": [px, py, lift], "yaw": yaw, "label": "lift"},
-        {"op": "move", "xyz": [tx, ty, lift], "yaw": yaw, "label": "carry"},
-        {"op": "move", "xyz": [tx, ty, z0 + grip_h + 0.012], "yaw": yaw, "label": "approach"},
-        {"op": "move", "xyz": [tx, ty, z0 + grip_h - seat], "yaw": yaw, "label": "insert"},
-        {"op": "wait", "ticks": int(p.get("dwell_ticks", 15)), "label": "dwell"},
-        {"op": "open", "label": "release"},
-        {"op": "move", "xyz": [tx, ty, hover], "yaw": yaw, "label": "retreat"},
-    ]

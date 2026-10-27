@@ -222,16 +222,33 @@ class Session:
         for _ in range(SETTLE_STEPS):
             self.step(row)
 
-    def replay(self, actions: np.ndarray, settle: bool = True) -> dict[str, Any]:
+    def _frame(self) -> np.ndarray:
+        obs = self.task.get_observation()["policy"]
+        return np.concatenate([np.asarray(obs["wrist_right_rgb"]), np.asarray(obs["wrist_left_rgb"])], axis=1)
+
+    def replay(self, actions: np.ndarray, settle: bool = True, video: str | None = None, fps: int = 15) -> dict[str, Any]:
         """Resets (unless nothing has run since the first reset of the process: then the replay is that first episode,
         exactly what the grader's fresh-process replay runs), replays the rows open loop, holds the last row."""
         if not (self.resets == 0 and self.sim_steps == 0):
             self.reset()
-        for r in np.asarray(actions, dtype=np.float64):
-            self.step(r)
+        frames: list[np.ndarray] = []
+        every = max(1, int(round(60 / max(1, int(fps)))))  # 60 Hz control -> `fps` video frames per second
+        rows = list(np.asarray(actions, dtype=np.float64))
         if settle:
-            self.settle()
-        return self.status()
+            rows += [rows[-1]] * SETTLE_STEPS if rows else []
+        for i, r in enumerate(rows):
+            self.step(r)
+            if video and self.cameras and i % every == 0 and len(frames) < 9000:
+                frames.append(self._frame())
+        st = self.status()
+        if video and frames:  # after the verdict, never part of it
+            try:
+                import imageio.v2 as imageio
+
+                imageio.mimsave(video, frames, fps=int(fps))
+            except Exception as exc:  # noqa: BLE001
+                _log(f"video not written: {exc!r}")
+        return st
 
     # ------------------------------------------------------------------ queries
     def status(self) -> dict[str, Any]:
@@ -292,6 +309,7 @@ def main(argv=None) -> int:
     m.add_argument("--task", required=True); m.add_argument("--seed", type=int, default=0); m.add_argument("--out", required=True)
     r = sub.add_parser("replay")
     r.add_argument("--task", required=True); r.add_argument("--instance", required=True); r.add_argument("--traj", required=True)
+    r.add_argument("--video", default=None); r.add_argument("--fps", type=int, default=15)
     o = sub.add_parser("run-oracle")
     o.add_argument("--task", required=True); o.add_argument("--instance", required=True); o.add_argument("--code", required=True)
     o.add_argument("--out", required=True)
@@ -307,9 +325,9 @@ def main(argv=None) -> int:
         elif a.cmd == "replay":
             d = np.load(a.traj, allow_pickle=False)
             acts = np.asarray(d["actions"], dtype=np.float64)
-            s = Session(a.task, instance=a.instance, tactile=False)
+            s = Session(a.task, instance=a.instance, tactile=False, cameras=bool(a.video))
             t0 = time.time()
-            st = s.replay(acts)
+            st = s.replay(acts, video=a.video, fps=a.fps)
             print(json.dumps({"replays": [{"success": st["success"], "state_sha": st["state_sha"], "sim_steps": st["sim_steps"]}],
                               "instance_exact": bool(s.instance_exact), "instance_matches": bool(s.instance_matches),
                               "wall_s": round(time.time() - t0, 1)}), flush=True)

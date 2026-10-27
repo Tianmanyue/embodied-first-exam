@@ -32,7 +32,19 @@ RUN uv python install 3.11.17 && uv venv -p 3.11.17 /opt/gsmini/.venv && \
     VIRTUAL_ENV=/opt/gsmini/.venv uv pip install "isaaclab[isaacsim,all]==2.3.2" --extra-index-url https://pypi.nvidia.com && \
     VIRTUAL_ENV=/opt/gsmini/.venv uv pip install "pin-pink==4.2.0" "daqp" "h5py" "pyyaml" "scipy" "imageio[ffmpeg]" && \
     rm -rf /root/.cache/uv
+# Pink IK's own stack at the versions the tasks were developed with (pinocchio 2.x, which the line above resolves to,
+# does not load with pin-pink 4.2); numpy goes back to Isaac Sim 5.1's 1.26 without touching the rest
+# (its replicator graph breaks on numpy 2; pin 4.0 declares numpy >= 2 but runs on 1.26, as in the tasks' development setup)
+RUN VIRTUAL_ENV=/opt/gsmini/.venv uv pip install "pin==4.0.0" "pin-pink==4.2.0" "daqp==0.7.2" "qpsolvers==4.8.2" && \
+    VIRTUAL_ENV=/opt/gsmini/.venv uv pip install --no-deps --reinstall "numpy==1.26.0" && \
+    rm -rf /root/.cache/uv
 ENV PATH="/opt/gsmini/.venv/bin:${PATH}" VIRTUAL_ENV=/opt/gsmini/.venv
+# the Newton sidecar of the cloth / cable / dough / FEM tasks: its own Python 3.12 environment (Newton needs warp >= 1.17,
+# the Isaac side ships 1.12); the tasks' sidecar code goes next to it, in /opt/gsmini/sidecar (from gsmini-files)
+RUN uv python install 3.12.13 && uv venv -p 3.12.13 /opt/gsmini/sidecar/.venv && \
+    VIRTUAL_ENV=/opt/gsmini/sidecar/.venv uv pip install "newton==1.7.0" "warp-lang==1.18.0" "numpy" && \
+    rm -rf /root/.cache/uv
+ENV WARP_CACHE_PATH=/cache/warp
 # Kit caches (shaders, extension registry, user data) live under /cache so a task's compose can keep them in a volume
 RUN mkdir -p /cache/ov-cache /cache/ov-data /cache/ov-logs /root/.cache /root/.local/share /root/.nvidia-omniverse /app/output && \
     ln -s /cache/ov-cache /root/.cache/ov && ln -s /cache/ov-data /root/.local/share/ov && ln -s /cache/ov-logs /root/.nvidia-omniverse/logs
@@ -48,8 +60,9 @@ WORKDIR /app
 # the gsmini_tasks package as the agent may read it (no scripted policies, no expert parameters) and the tooling.
 FROM gsmini-base
 COPY instance.json /app/instance.json
-COPY --from=ghcr.io/mll-lab-nu/efe-private:gsmini-files-0.1.0@sha256:9f1814a9610ec871088bc50db5ada1f2dcb78be2db5e5e478dd50f2aa685c1f1 /gsmini_tasks /opt/gsmini/gsmini_tasks
-COPY --from=ghcr.io/mll-lab-nu/efe-private:gsmini-files-0.1.0@sha256:9f1814a9610ec871088bc50db5ada1f2dcb78be2db5e5e478dd50f2aa685c1f1 /rcb_gsmini.py /opt/tools/rcb_gsmini.py
+COPY --from=ghcr.io/mll-lab-nu/efe-private:gsmini-files-0.1.0@sha256:ef856fbf2540d16a1ff7d8f2d961b081b5ef9375319b40a43fce5d1375e7a6e1 /gsmini_tasks /opt/gsmini/gsmini_tasks
+COPY --from=ghcr.io/mll-lab-nu/efe-private:gsmini-files-0.1.0@sha256:ef856fbf2540d16a1ff7d8f2d961b081b5ef9375319b40a43fce5d1375e7a6e1 /sidecar /opt/gsmini/sidecar
+COPY --from=ghcr.io/mll-lab-nu/efe-private:gsmini-files-0.1.0@sha256:ef856fbf2540d16a1ff7d8f2d961b081b5ef9375319b40a43fce5d1375e7a6e1 /rcb_gsmini.py /opt/tools/rcb_gsmini.py
 ENV PYTHONPATH=/opt/tools:/opt/gsmini
 RUN mkdir -p /app/output
 WORKDIR /app
