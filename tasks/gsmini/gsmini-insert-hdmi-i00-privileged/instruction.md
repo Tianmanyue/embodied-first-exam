@@ -1,33 +1,27 @@
 # GSMini · insert_hdmi — frozen instance
 
-You control a simulated dual-arm **X-Trainer** robot (Isaac Lab 2.3 / Isaac Sim 5.1, PhysX physics) via Python. Its
-right gripper carries two **GelSight Mini** tactile sensors, one on each finger. **Task:** pick up the HDMI plug lying on
-the table and insert it into the HDMI port standing on the table in front of it, then let go of it and move the hand away.
+Pick up the HDMI plug standing on the table, insert it into the port, let go and move the hand away.
 
-The scene objects are `hdmi` (the plug; it starts lying on the table at about (-0.04, 0.00) m) and `hdmi_slot` (the port,
-fixed to the table at about (-0.04, -0.09) m, opening upward). The success predicate, checked after every control step,
-is reached once all of these have held:
-- the plug's insertion tip is inside the port's bore: lateral offset from the bore axis at most **6 mm**, angle between the
-  plug's insertion axis and the bore axis at most **15°**, insertion depth at least **the bore depth minus 5 mm**; the bore
-  is 9.9 mm deep (`hole_top_local` to `hole_bottom_local` in `.../univtac/HDMISlot/Annotation/insertion_pose.json`), so the
-  tip must go at least 4.9 mm in. This latches: once reached, a later pop-out does not undo it;
-- the plug was lifted at least **2 cm** above its starting height while the right end-effector was within 0.3 m of it
-  (the robot picked it up; pushing it does not count);
-- the right end-effector is at least **0.35 m** away from the plug (the hand let go and moved away).
-Once the predicate has held for one control step the task stays solved for the rest of the episode.
+Objects: `hdmi` (the plug, 5 g, standing at about (-0.04, 0.00)) and `hdmi_slot` (the port, fixed at about (-0.04, -0.09), opening upward; bore depth 9.9 mm). Insertion geometry (tips, axes, bores) is in the objects' `Annotation/insertion_pose.json` files, in each object's own frame: the tip is `insertion_axis.head_local`, the axis runs tail to head, a bore runs from `hole_top_local` to `hole_bottom_local` of its slot.
 
-This is a *fixed scene instance*: the plug, the port and the robot always start at the same poses. You may reset and
+The success predicate, checked after every control step, is reached once all of these hold:
+- the plug was lifted more than **2 cm** above its starting height while the right end-effector (wrist link) was within 0.3 m of it (the robot picked it up)
+- the plug's tip is in the port: lateral offset at most **6 mm**, axis angle at most **15°**, depth at least **4.9 mm** (all at the same step)
+- the right wrist link is more than **0.15 m** from the plug's origin and the right gripper is wider than **0.09 m**
+Once reached, the task stays solved for the rest of the episode.
+
+This is a *fixed scene instance*: the objects and the robot always start at the same poses. You may reset and
 retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same initial state in two fresh processes and scored 1 if the task is solved in both replays and both
-end in the same state, else 0. After the last row the replay holds that row for 60 more control steps (1 s) before the
-task is judged (`s.replay` does the same). Also leave the script that produced it at `/app/output/gen.py`. Save a working
-trajectory as soon as you have one and overwrite it as you improve it: whatever is in `/app/output/` when the time is up
-is graded. The file holds `task` and `actions`, a (T, 18) float array of at most **30,000 rows** (one per control step,
-500 s of robot time); anything else (another shape, inf, NaN in a gripper column, more rows, a file that is not such an
-npz) scores 0. Each replay has max(1800 s, 900 s + 1 s per 4 rows) of wall clock.
+open-loop from the same initial state in two fresh processes and scored 1 if the task is solved in both replays and both end in the same state, else 0.
+After the last row the replay holds that row for 60 more control steps (1 s) before the task is judged (`s.replay` does
+the same). Also leave the script that produced it at `/app/output/gen.py`. Save a working trajectory as soon as you have
+one and overwrite it as you improve it: whatever is in `/app/output/` when the time is up is graded. The file holds
+`task` and `actions`, a (T, 22) float array of at most **30,000 rows** (one per control step, 500 s of robot time);
+anything else (another shape, inf, NaN in a gripper column, more rows, a file that is not such an npz) scores 0. Each
+replay has max(1800 s, 900 s + 1 s per 4 rows) of wall clock.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
@@ -38,18 +32,18 @@ s.objects()                        # name -> {"position": [x, y, z], "orientatio
 s.proprio()                        # joint_pos (16), right_ee_pose / left_ee_pose (7: x y z qw qx qy qz), gripper_width (2, m)
 s.tactile()                        # both gel pads: tactile_left_height / tactile_right_height (60, 80) mm,
                                    # *_contact (60, 80) bool, *_press_mm; Session(..., tactile_rgb=True) adds *_rgb (240, 320, 3)
-s.step(row)                        # one control step with an (18,) row (layout under Conventions)
+s.step(row)                        # one control step with a (22,) row (layout under Conventions)
 s.hold_action()                    # the row that keeps both arms and the gripper commands as they are
 s.move_ee(arm, pose7, steps=60)    # straight-line target interpolation for one arm (0 = right, 1 = left) over `steps` steps
 s.set_gripper(arm, closed, steps=30)
-s.record_start(); ...; actions = s.record_stop()   # (T, 18) rows, one per control step
+s.record_start(); ...; actions = s.record_stop()   # (T, 22) rows, one per control step
 s.status()                         # {'success': bool, 'sim_steps': int, 'resets': int, 'state_sha': str, 'metrics': {...}}
 s.replay(actions)                  # resets, replays open-loop, holds the last row 60 steps, returns status
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 ```
 Cameras (two wrist cameras): `Session(..., cameras=True)` then `s.render_frame("wrist_right_rgb")` /
 `s.render_frame("wrist_left_rgb")` (slower: every step renders). The scene, robot and object files are under
-`/opt/gsmini/gsmini_tasks/` (task logic in `rigid/task.py`, this task's scene in `tasks/insert_hdmi/cfg.yaml`); each
+`/opt/gsmini/gsmini_tasks/` (task logic in `tasks/insert_hdmi/task.py` and the modules it imports, this task's scene in `tasks/insert_hdmi/cfg.yaml`); each
 object's `Annotation/` folder holds grasp poses (`grasp_pose.json`: right end-effector poses `[x, y, z, qw, qx, qy, qz]` in
 the object's frame) and insertion geometry (`insertion_pose.json`).
 
@@ -59,12 +53,17 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
 ## Conventions
 - Frame: the env frame, metres, z up. The table top is at z = 1.102; the robot base is at (-0.5, 0, 1.1) facing +x.
   Quaternions are **WXYZ**.
-- Action row (18): 0-6 the right end-effector target (x, y, z, qw, qx, qy, qz), 7-13 the left one, 14 and 15 the right /
+- Action row (22): 0-6 the right end-effector target (x, y, z, qw, qx, qy, qz), 7-13 the left one, 14 and 15 the right /
   left gripper command (0 = open, 1 = closed), 16 and 17 an optional right / left finger-gap override in metres (NaN = use
-  the open / closed command). A NaN in an arm's seven numbers holds that arm where it is. The targets are tracked by a
-  differential IK with joint PD drives, so a far target is not reached in one step: move in small increments.
+  the open / closed command), 18-21 optional right finger drive settings applied from that step on (NaN = unchanged):
+  velocity limit (m/s), effort limit (N, the drive's default is 20 N), stiffness, damping. A NaN in an arm's seven numbers
+  holds that arm where it is. The targets are tracked by a differential IK with joint PD drives, so a far target is not
+  reached in one step: move in small increments. Rows of 16 or 18 numbers are padded with NaN.
+- A release of the right gripper is physical: a step whose right gripper command goes from 1 (closed) to 0 (open) starts a
+  release, which counts once both right finger joints have opened by at least 10 mm from where they were at that step
+  (and stayed so for the number of steps a task states); a later close command withdraws it.
 - The end-effector frame is the wrist link (`J1_6` right, `J2_6` left); the gel-pad centre is 0.1777 m along the wrist's +z
-  axis. The right gripper opens to about 0.10 m between the gel faces. The left arm starts parked; it is not needed.
+  axis. The right gripper opens to about 0.10 m between the gel faces; its width is 0.082 + q(J1_7) - q(J1_8) (m).
 - Control runs at 60 Hz (physics 1/120 s, decimation 2). There is no step budget: the time limit (`## Time limit`) is your
   only budget (a runaway guard ends an episode after 30,000 control steps, the most a trajectory may hold).
 - One `Session` per process. Physics is PhysX on the **CPU** (the GPU pipeline does not replay bit for bit), rendering on
@@ -72,6 +71,8 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
   state as the grader's fresh-process replay of the same rows. After `s.reset()` the state is restored but not every
   PhysX internal, so a run recorded after a reset can end differently: record the final trajectory from the first
   episode of a fresh process and check it with the CLI replay above.
+
+These three hold at the same step.
 
 ## External material
 You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.

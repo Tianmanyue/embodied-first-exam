@@ -140,6 +140,7 @@ class Task(RigidTask):
     def _after_objects_placed(self) -> None:
         self.set_gravity(False)
         self._closed_ticks = 0
+        self._ticks = 0
 
     def _after_settle(self) -> None:
         self._left_tcp0 = self.tcp(1).copy()
@@ -148,7 +149,10 @@ class Task(RigidTask):
     def _apply_action(self, action) -> None:
         super()._apply_action(action)
         self._closed_ticks = self._closed_ticks + 1 if int(action.gripper[0]) == GRIPPER_CLOSE else 0
-        if not self._gravity_on and self._closed_ticks >= self.gravity_on_after:
+        self._ticks += 1
+        # the rod starts weightless between the closed pads; gravity switches on once the grip has settled, and in any
+        # case after the same number of ticks (opening early must not leave the rod floating)
+        if not self._gravity_on and (self._closed_ticks >= self.gravity_on_after or self._ticks >= self.gravity_on_after):
             self.set_gravity(True)
 
     # ------------------------------------------------------------------ measurements

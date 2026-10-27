@@ -14,6 +14,10 @@ trajectory : the (T, 18) rows handed to the robot, one per control step (60 Hz: 
                7-13  left end-effector target   x y z qw qx qy qz
                14,15 right / left gripper: 0 = open, 1 = closed
                16,17 optional right / left finger gap override in metres (NaN = use the open / closed command)
+               18-21 optional right finger drive settings, applied from this step on (NaN = unchanged): velocity limit
+                     (m/s), effort limit (N), stiffness, damping
+             The right gripper's final release is physical: an open command (1 -> 0 on column 14) after a close counts as
+             a release once the fingers have opened; a new close command withdraws it.
              A NaN end-effector target holds that arm where it is. The targets are tracked by a differential IK and the
              joint PD drives. A replay holds the last row for SETTLE_STEPS more steps before the task is judged.
 budget     : no step budget; MAX_STEPS only stops runaway trajectories.
@@ -54,7 +58,7 @@ from typing import Any
 
 import numpy as np
 
-ACTION_DIM = 18
+ACTION_DIM = 22
 MAX_STEPS = 30000
 SETTLE_STEPS = 60
 DEVICE = os.environ.get("RCB_GSMINI_DEVICE", "cpu")
@@ -118,8 +122,35 @@ class Session:
         self.sim_steps = 0
         self._rec: list[np.ndarray] | None = None
         self._last = None
+        self._pending: dict[int, float] | None = None
+        self._grip_prev: int | None = None
         self.obs = None
+        # the task methods a scripted policy calls to change the gripper: the Session applies them from the action rows
+        # (so a replay reproduces them); calls made directly on the task are turned into the next row's columns 18-21,
+        # and the policy's own release announcements are replaced by the physical rule above
+        self._orig = {n: getattr(self.task, n) for n in ("set_finger_limits", "set_finger_gains", "note_finish_release", "clear_finish_release") if hasattr(self.task, n)}
+        if "set_finger_limits" in self._orig:
+            self.task.set_finger_limits = self._capture_limits
+        if "set_finger_gains" in self._orig:
+            self.task.set_finger_gains = self._capture_gains
+        if "note_finish_release" in self._orig:
+            self.task.note_finish_release = lambda: None
+            self.task.clear_finish_release = lambda: None
         self.reset()
+
+    def _capture_limits(self, vel_limit: float = 0.0, effort_limit: float = 0.0) -> None:
+        self._pending = dict(self._pending or {})
+        if vel_limit > 0.0:
+            self._pending[18] = float(vel_limit)
+        if effort_limit > 0.0:
+            self._pending[19] = float(effort_limit)
+
+    def _capture_gains(self, stiffness: float = 0.0, damping: float = 0.0) -> None:
+        self._pending = dict(self._pending or {})
+        if stiffness > 0.0:
+            self._pending[20] = float(stiffness)
+        if damping > 0.0:
+            self._pending[21] = float(damping)
 
     # ------------------------------------------------------------------ state
     def _state(self) -> np.ndarray:
@@ -135,6 +166,8 @@ class Session:
         self.resets += 1
         self.sim_steps = 0
         self._last = None
+        self._pending = None
+        self._grip_prev = None
         s0 = self._state()
         self.reset_sha = hashlib.sha1(s0.tobytes()).hexdigest()
         if self.resets == 0:  # the instance is checked on the first reset of the process (later resets are not bit-exact)
@@ -149,19 +182,43 @@ class Session:
         from gsmini_tasks.core.types import Action
 
         r = np.asarray(row, dtype=np.float64).reshape(-1)
-        if r.size == 16:
-            r = np.concatenate([r, [np.nan, np.nan]])
+        if r.size in (16, 18):
+            r = np.concatenate([r, np.full(ACTION_DIM - r.size, np.nan)])
         if r.size != ACTION_DIM:
-            raise ValueError(f"a row has {ACTION_DIM} numbers (or 16 without the gap override), got {r.size}")
+            raise ValueError(f"a row has {ACTION_DIM} numbers (16 or 18 are padded with NaN), got {r.size}")
         if not np.all(np.isfinite(r[14:16])):
             raise ValueError("gripper commands must be finite (0 = open, 1 = closed)")
         gap = None if np.all(np.isnan(r[16:18])) else r[16:18].copy()
         return r, Action(r[:14].copy(), np.rint(r[14:16]).astype(np.int64), gap)
 
+    def _apply_extras(self, r: np.ndarray) -> np.ndarray:
+        """Finger drive settings (columns 18-21) and the release bookkeeping of the right gripper; returns the row as
+        recorded (with any drive settings the task code requested since the last step merged in)."""
+        if self._pending is not None:
+            for i, v in self._pending.items():
+                if np.isnan(r[i]):
+                    r[i] = v
+            self._pending = None
+        t = self.task
+        vel, eff, kp, kd = (float(x) for x in r[18:22])
+        if (np.isfinite(vel) or np.isfinite(eff)) and hasattr(t, "set_finger_limits"):
+            self._orig["set_finger_limits"](vel if np.isfinite(vel) else 0.0, eff if np.isfinite(eff) else 0.0)
+        if (np.isfinite(kp) or np.isfinite(kd)) and hasattr(t, "set_finger_gains"):
+            self._orig["set_finger_gains"](kp if np.isfinite(kp) else 0.0, kd if np.isfinite(kd) else 0.0)
+        cmd = int(round(r[14]))
+        if hasattr(t, "note_finish_release") and self._grip_prev is not None and cmd != self._grip_prev:
+            if cmd == 0:
+                self._orig["note_finish_release"]()
+            else:
+                self._orig["clear_finish_release"]()
+        self._grip_prev = cmd
+        return r
+
     def step(self, row) -> None:
         if self.sim_steps >= MAX_STEPS:
             raise RuntimeError(f"MAX_STEPS ({MAX_STEPS}) reached")
         r, act = self._action(row)
+        r = self._apply_extras(r)
         self.obs, _info = self.task.step(act)
         self.sim_steps += 1
         self._last = r
@@ -169,9 +226,11 @@ class Session:
             self._rec.append(r)
 
     def hold_action(self) -> np.ndarray:
-        """A row that holds both arms and keeps the current gripper commands."""
+        """A row that holds both arms and keeps the current gripper commands (drive settings unchanged)."""
         if self._last is not None:
-            return self._last.copy()
+            row = self._last.copy()
+            row[18:22] = np.nan
+            return row
         row = np.full(ACTION_DIM, np.nan)
         row[14:16] = 0.0
         return row
@@ -234,8 +293,10 @@ class Session:
         frames: list[np.ndarray] = []
         every = max(1, int(round(60 / max(1, int(fps)))))  # 60 Hz control -> `fps` video frames per second
         rows = list(np.asarray(actions, dtype=np.float64))
-        if settle:
-            rows += [rows[-1]] * SETTLE_STEPS if rows else []
+        if settle and rows:
+            hold = rows[-1].copy()
+            hold[18:22] = np.nan  # the hold keeps the drive settings in force, as settle() does
+            rows += [hold] * SETTLE_STEPS
         for i, r in enumerate(rows):
             self.step(r)
             if video and self.cameras and i % every == 0 and len(frames) < 9000:

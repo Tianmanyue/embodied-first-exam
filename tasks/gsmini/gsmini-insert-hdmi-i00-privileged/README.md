@@ -7,27 +7,21 @@
 | Twin | — (privileged only) |
 | Simulator / robot | `gsmini` / `xtrainer-gsmini` |
 | Family / instance | `insert_hdmi` / seed 0 |
-| Oracle | `full` — solution/: the scripted demonstration policy (grasp label selection, straight-line approach, insertion along the port axis, release), recorded through the Session; graded 1 by two fresh-process replays. |
+| Oracle | `full` — solution/: the scripted demonstration policy of this task, recorded through the Session; graded 1 by the fresh-process replays. |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe-private:gsmini-0.1.0` |
 
 ## Task
-Pick up the HDMI plug lying on the table, insert it into the port, let go and move the hand away.
+Pick up the HDMI plug and insert it into the port.
 
 ## Difficulty
-A peg-in-hole insertion with a 9.9 mm deep bore and a 6 mm lateral tolerance, on a robot driven through end-effector
-targets only: the agent picks the grasp (annotated grasp poses are provided), aligns the plug's insertion axis with the
-port, inserts it and releases it without pulling it back out. Two GelSight Mini sensors on the gripper report contact.
+Contact-rich manipulation with a tactile gripper, driven through end-effector targets only.
 
 ## Reference solution
-`solution/oracle_insert_hdmi.py`: the scripted demonstration policy (grasp label selection, approach, insertion along the
-port axis, release at the stop), recorded through the Session; `solution/solve.sh` lays the policy code over the package
-first (the agent's image does not carry it).
+`solution/oracle_insert_hdmi.py`: the scripted demonstration policy, recorded through the Session; `solution/solve.sh` lays the policy code over the package first (the agent's image does not carry it).
 
 ## Verification
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes (`tests/grade.py`);
-pass iff the task's success latch is set in every replay, the final-state hashes agree and the rebuilt frozen scene
-matches the recorded one. With PhysX on the CPU a fresh process reproduces the live run bit for bit.
+Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes (`tests/grade.py`); pass iff the task's success predicate holds in every replay and the final-state hashes agree, and the rebuilt frozen scene matches the recorded one.
 
 ## Compute resources
 Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
