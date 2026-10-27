@@ -1,0 +1,584 @@
+# gsmini_tasks asset manifest (version 2)
+# Paths are relative to gsmini_tasks/assets/. Every file a task needs is listed and shipped inside the package.
+# ship: true  -> included in the package; scripts/fetch_assets.py --check verifies size + sha256.
+# generate:   -> the file can also be rebuilt locally by a package script (scripts/fetch_assets.py --regenerate).
+# upstream:   -> where the third-party file comes from (informational; nothing is downloaded at install time).
+# Third-party meshes: license 'see upstream project' = the licence of the origin URL applies to the mesh; annotations belong to this package.
+version: 2
+paths_relative_to: gsmini_tasks/assets
+tasks: [one_leg, square_table, lamp_bulb, drawer_container, gear_mesh, nut_thread, insert_tube, insert_hdmi, lift, handover, cloth_edge_feed, cloth_fold_half, cable_needle_thread, cable_slack_reduce, cable_route_channel, sleeve_pull_on_forearm, dough_target_shape, dough_press_thickness, dough_fill_tray, fem_plug_insert]
+sets:
+  dough:
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    ship: true
+    notes: "Procedural USDs (box handle + box head, UsdPreviewSurface, convexHull colliders) written by scripts/make_dough_assets.py (pxr only); the shipped files are byte-identical to a fresh run of that script."
+  furniturebench:
+    origin: {project: "FurnitureBench part meshes (square_table, lamp, drawer), converted to binary USD", url: "https://github.com/clvrai/furniture-bench"}
+    license: see upstream project
+    ship: true
+    notes: "Upstream repository is MIT licensed. Binary usdc, no external references; one mesh per part with convex colliders. Annotation/*.json: grasp / insertion poses."
+  isaac_factory:
+    origin: {project: "NVIDIA Isaac Lab Factory task USDs (Isaac Sim asset library, processed copies)", url: "https://github.com/isaac-sim/IsaacLab"}
+    license: see upstream project
+    ship: true
+    notes: "Processed with pxr from the official Factory USDs (Isaac Sim 5.1 library, Isaac/IsaacLab/Factory/factory_*.usd): PhysicsArticulationRootAPI/root FixedJoint stripped, solverPositionIterationCount 192 / velocity 1 baked, contactOffset 0.005 / restOffset 0 baked, SDF colliders kept; gear_medium and nut_m16 re-origined to body centre (mesh shift). References OmniPBR.mdl (Kit built-in). Annotation/*.json: grasp / insertion poses."
+  univtac:
+    origin: {project: "UniVTAC benchmark object meshes (insert_tube, insert_HDMI, lift), converted to USD", url: "https://github.com/univtac/UniVTAC"}
+    license: see upstream project
+    ship: true
+    notes: "Upstream repository is Apache-2.0 licensed. Binary usdc, no external references. Annotation/*.json: grasp / insertion poses."
+  bottle:
+    origin: {project: "bottle_5 mesh of the upstream simulator's object library, re-exported for the X-Trainer grasp", url: null}
+    license: see upstream project
+    ship: true
+    notes: "Binary usdc with Omniverse Kit layer metadata only. Annotation/grasp_pose.json holds grasp poses."
+  hdri:
+    origin: {project: Poly Haven HDRIs, url: "https://polyhaven.com/hdris"}
+    license: CC0 (Poly Haven; see upstream page)
+    ship: true
+    notes: "4k Radiance .hdr (~25 MB each; 4k variant). Rigid tasks light with noon_grass_4k, soft and dough tasks with photo_studio_01_4k. Lighting randomisation over further Poly Haven HDRIs is optional and not part of the package. The local files were re-saved through an image editor, so the sha256 may differ from the Poly Haven download."
+  desk:
+    origin: {project: NVIDIA Omniverse SimReady props (appleseed_coffeetable), url: "https://omniverse-content-staging.s3.us-west-2.amazonaws.com/Assets/simready_content/common_assets/props/appleseed_coffeetable/"}
+    license: NVIDIA Omniverse asset EULA
+    ship: false
+    reason: replaced by procedural table
+    notes: "Not shipped and not needed: the scene uses a plain table slab (SceneCfg.desk)."
+files:
+  - path: objects/dough/press_tool.usd
+    set: dough
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 2040
+    sha256: 42619e8ef8d81ccf4afb7fa545b4bf41433a15531c74f20a8caa6f3d7234fdf3
+    needed_by: [dough_press_thickness, dough_target_shape]
+    ship: true
+    generate: {script: scripts/make_dough_assets.py, args: [press_tool]}
+  - path: objects/dough/stamp_tool.usd
+    set: dough
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 2040
+    sha256: ad525e8d954968ba9854a351dce5ce215b2c94e88da237aeff646bd3ee9053bb
+    needed_by: [dough_target_shape]
+    ship: true
+    generate: {script: scripts/make_dough_assets.py, args: [stamp_tool]}
+  - path: objects/dough/scraper_tool.usd
+    set: dough
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 2042
+    sha256: a387f6809261d138cb9fc76144767a3abda7c39978065ee51279a9eb2fc4187c
+    needed_by: [dough_fill_tray]
+    ship: true
+    generate: {script: scripts/make_dough_assets.py, args: [scraper_tool]}
+  - path: objects/dough/plug_carrier.usd
+    set: dough
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 2041
+    sha256: 931faf27a47726b2ff855d93e8a2429a6471a7b06ffe60357a5b62445699ea75
+    needed_by: [fem_plug_insert]
+    ship: true
+    generate: {script: scripts/make_dough_assets.py, args: [plug_carrier]}
+  - path: objects/furniturebench/square_table_top/Object.usd
+    set: furniturebench
+    origin: {project: "FurnitureBench part meshes (square_table, lamp, drawer), converted to binary USD", url: "https://github.com/clvrai/furniture-bench"}
+    license: see upstream project
+    size: 152439
+    sha256: a15f42c18c27eb92854cfb1e93aa06df3445482764a2ea66aab9795c8490defb
+    needed_by: [one_leg, square_table]
+    ship: true
+  - path: objects/furniturebench/square_table_top/Annotation/insertion_pose.json
+    set: furniturebench
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 572
+    sha256: ae769aeac2042ce1e75ee93439fc1328639f9f9ae27200de704f762b7ba52452
+    needed_by: [one_leg, square_table]
+    ship: true
+  - path: objects/furniturebench/Square_table_leg/Object.usd
+    set: furniturebench
+    origin: {project: "FurnitureBench part meshes (square_table, lamp, drawer), converted to binary USD", url: "https://github.com/clvrai/furniture-bench"}
+    license: see upstream project
+    size: 80644
+    sha256: b595cc4f066744d5fddef168ed276859bc2490e66a4796305f61f23c8b7bfff8
+    needed_by: [one_leg, square_table]
+    ship: true
+  - path: objects/furniturebench/Square_table_leg/Annotation/grasp_pose.json
+    set: furniturebench
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 37750
+    sha256: e39212d1d237f9bf6886702209eae8528c589549f868a5242b16b731a7bc80c9
+    needed_by: [one_leg, square_table]
+    ship: true
+  - path: objects/furniturebench/Square_table_leg/Annotation/insertion_pose.json
+    set: furniturebench
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 296
+    sha256: eb3fa5ef873b8f8f337a97604e5148eaaa37855aef1f4cbc12ed031b10132189
+    needed_by: [one_leg, square_table]
+    ship: true
+  - path: objects/furniturebench/square_table_leg2/Object.usd
+    set: furniturebench
+    origin: {project: "FurnitureBench part meshes (square_table, lamp, drawer), converted to binary USD", url: "https://github.com/clvrai/furniture-bench"}
+    license: see upstream project
+    size: 80644
+    sha256: b595cc4f066744d5fddef168ed276859bc2490e66a4796305f61f23c8b7bfff8
+    needed_by: [square_table]
+    ship: true
+    notes: "identical bytes to Square_table_leg/Object.usd (one leg mesh, four instances)"
+  - path: objects/furniturebench/square_table_leg2/Annotation/grasp_pose.json
+    set: furniturebench
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 37750
+    sha256: e39212d1d237f9bf6886702209eae8528c589549f868a5242b16b731a7bc80c9
+    needed_by: [square_table]
+    ship: true
+  - path: objects/furniturebench/square_table_leg2/Annotation/insertion_pose.json
+    set: furniturebench
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 296
+    sha256: eb3fa5ef873b8f8f337a97604e5148eaaa37855aef1f4cbc12ed031b10132189
+    needed_by: [square_table]
+    ship: true
+  - path: objects/furniturebench/square_table_leg3/Object.usd
+    set: furniturebench
+    origin: {project: "FurnitureBench part meshes (square_table, lamp, drawer), converted to binary USD", url: "https://github.com/clvrai/furniture-bench"}
+    license: see upstream project
+    size: 80644
+    sha256: b595cc4f066744d5fddef168ed276859bc2490e66a4796305f61f23c8b7bfff8
+    needed_by: [square_table]
+    ship: true
+    notes: "identical bytes to Square_table_leg/Object.usd (one leg mesh, four instances)"
+  - path: objects/furniturebench/square_table_leg3/Annotation/grasp_pose.json
+    set: furniturebench
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 37750
+    sha256: e39212d1d237f9bf6886702209eae8528c589549f868a5242b16b731a7bc80c9
+    needed_by: [square_table]
+    ship: true
+  - path: objects/furniturebench/square_table_leg3/Annotation/insertion_pose.json
+    set: furniturebench
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 296
+    sha256: eb3fa5ef873b8f8f337a97604e5148eaaa37855aef1f4cbc12ed031b10132189
+    needed_by: [square_table]
+    ship: true
+  - path: objects/furniturebench/square_table_leg4/Object.usd
+    set: furniturebench
+    origin: {project: "FurnitureBench part meshes (square_table, lamp, drawer), converted to binary USD", url: "https://github.com/clvrai/furniture-bench"}
+    license: see upstream project
+    size: 80644
+    sha256: b595cc4f066744d5fddef168ed276859bc2490e66a4796305f61f23c8b7bfff8
+    needed_by: [square_table]
+    ship: true
+    notes: "identical bytes to Square_table_leg/Object.usd (one leg mesh, four instances)"
+  - path: objects/furniturebench/square_table_leg4/Annotation/grasp_pose.json
+    set: furniturebench
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 37750
+    sha256: e39212d1d237f9bf6886702209eae8528c589549f868a5242b16b731a7bc80c9
+    needed_by: [square_table]
+    ship: true
+  - path: objects/furniturebench/square_table_leg4/Annotation/insertion_pose.json
+    set: furniturebench
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 296
+    sha256: eb3fa5ef873b8f8f337a97604e5148eaaa37855aef1f4cbc12ed031b10132189
+    needed_by: [square_table]
+    ship: true
+  - path: objects/furniturebench/lamp_base/Object.usd
+    set: furniturebench
+    origin: {project: "FurnitureBench part meshes (square_table, lamp, drawer), converted to binary USD", url: "https://github.com/clvrai/furniture-bench"}
+    license: see upstream project
+    size: 118280
+    sha256: 0ef6632ba90f8fb19c1368efa2fa0c186047bbf99076a351e052ec0d6d510d7a
+    needed_by: [lamp_bulb]
+    ship: true
+  - path: objects/furniturebench/lamp_base/Annotation/insertion_pose.json
+    set: furniturebench
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 380
+    sha256: 4b978cea4f4851519cc8d9549cfddc240a67e3036391518d5c5951d47fa1e785
+    needed_by: [lamp_bulb]
+    ship: true
+  - path: objects/furniturebench/lamp_bulb/Object.usd
+    set: furniturebench
+    origin: {project: "FurnitureBench part meshes (square_table, lamp, drawer), converted to binary USD", url: "https://github.com/clvrai/furniture-bench"}
+    license: see upstream project
+    size: 177151
+    sha256: a41b28e1e86c054335a18f9385587ea6e8c517b8703c7a4fbc36207661c62db1
+    needed_by: [lamp_bulb]
+    ship: true
+  - path: objects/furniturebench/lamp_bulb/Annotation/grasp_pose.json
+    set: furniturebench
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 8928
+    sha256: 5d1ccc5b079aee6ba3475e537b7d702708bdfff93964ccb84dcf9d510806fae3
+    needed_by: [lamp_bulb]
+    ship: true
+  - path: objects/furniturebench/lamp_bulb/Annotation/insertion_pose.json
+    set: furniturebench
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 278
+    sha256: ac8bb72d66fae8a429e7f8f4043346050cb65282e3616940803a4f2540ab386c
+    needed_by: [lamp_bulb]
+    ship: true
+  - path: objects/furniturebench/lamp_hood/Object.usd
+    set: furniturebench
+    origin: {project: "FurnitureBench part meshes (square_table, lamp, drawer), converted to binary USD", url: "https://github.com/clvrai/furniture-bench"}
+    license: see upstream project
+    size: 75018
+    sha256: bc503a479a4c95fcc63c334d72034e90da0e94bc6a1812be4231fab0db3e741f
+    needed_by: [lamp_bulb]
+    ship: true
+  - path: objects/furniturebench/lamp_hood/Annotation/grasp_pose.json
+    set: furniturebench
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 974
+    sha256: fa9facf1b7484bd20e977fd4d7ba038ff469fe0dd7a721cd415bc4c383cd4c7f
+    needed_by: [lamp_bulb]
+    ship: true
+  - path: objects/furniturebench/lamp_hood/Annotation/insertion_pose.json
+    set: furniturebench
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 207
+    sha256: 03bc18572d938b45e591e0e757cfe67f1e0a8dc30796ae3215119be99c78d5dc
+    needed_by: [lamp_bulb]
+    ship: true
+  - path: objects/furniturebench/drawer_box/Object.usd
+    set: furniturebench
+    origin: {project: "FurnitureBench part meshes (square_table, lamp, drawer), converted to binary USD", url: "https://github.com/clvrai/furniture-bench"}
+    license: see upstream project
+    size: 32374
+    sha256: 3f5ce90a4a2aface28494b502c9def54c8347fc76ef492d67bcfd734bb423095
+    needed_by: [drawer_container]
+    ship: true
+  - path: objects/furniturebench/drawer_box/Annotation/insertion_pose.json
+    set: furniturebench
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 552
+    sha256: 9ceb5fd143b75237e68c079eca1fce19dc31ea5d0443c8af280ce2e0b257815f
+    needed_by: [drawer_container]
+    ship: true
+  - path: objects/furniturebench/drawer_container_top/Object.usd
+    set: furniturebench
+    origin: {project: "FurnitureBench part meshes (square_table, lamp, drawer), converted to binary USD", url: "https://github.com/clvrai/furniture-bench"}
+    license: see upstream project
+    size: 76808
+    sha256: 69f1e7a1833072fafd32bcab261f7113cbbf10b5bea8888c869a0b99707ae0ca
+    needed_by: [drawer_container]
+    ship: true
+  - path: objects/furniturebench/drawer_container_top/Annotation/grasp_pose.json
+    set: furniturebench
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 702
+    sha256: a1023c91a4177469e699855349f938ed2cb311c0934ce5dcef4286bae47f99f0
+    needed_by: [drawer_container]
+    ship: true
+  - path: objects/furniturebench/drawer_container_top/Annotation/insertion_pose.json
+    set: furniturebench
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 133
+    sha256: 5b52f263715685e8be834aef46f3904f3581cc48d88c68bdf5b7a342d1d308a7
+    needed_by: [drawer_container]
+    ship: true
+  - path: objects/furniturebench/drawer_container_bottom/Object.usd
+    set: furniturebench
+    origin: {project: "FurnitureBench part meshes (square_table, lamp, drawer), converted to binary USD", url: "https://github.com/clvrai/furniture-bench"}
+    license: see upstream project
+    size: 83943
+    sha256: d5b8cb4cb24ef027963319a28e855eab5fe42d3ac269650904c7e848acf47519
+    needed_by: [drawer_container]
+    ship: true
+  - path: objects/furniturebench/drawer_container_bottom/Annotation/grasp_pose.json
+    set: furniturebench
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 704
+    sha256: 7584aa2baf68ff76d24ad9917b2e6baa735e12fd1ac6e9cc4300d0b8bf06ae75
+    needed_by: [drawer_container]
+    ship: true
+  - path: objects/furniturebench/drawer_container_bottom/Annotation/insertion_pose.json
+    set: furniturebench
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 132
+    sha256: 040ffc054dd0598a7558f4b44bef8df4e27e4f4ffb7ac3aaf19952603677afbc
+    needed_by: [drawer_container]
+    ship: true
+  - path: objects/isaac_factory/gear_base/Object.usd
+    set: isaac_factory
+    origin: {project: "NVIDIA Isaac Lab Factory task USDs (Isaac Sim asset library, processed copies)", url: "https://github.com/isaac-sim/IsaacLab"}
+    license: see upstream project
+    size: 494810
+    sha256: 9dd633187201a2854b8c0451b44df26656c48bba08add163d0cdbee2e81f9f10
+    needed_by: [gear_mesh]
+    ship: true
+    upstream:
+      file: Isaac/IsaacLab/Factory/factory_gear_base_loose.usd
+      processed: true
+  - path: objects/isaac_factory/gear_base/Annotation/insertion_pose.json
+    set: isaac_factory
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 543
+    sha256: faa7188759494422150c1af07f16f8f752fa047b37d0c0d3340f64748acf81b8
+    needed_by: [gear_mesh]
+    ship: true
+  - path: objects/isaac_factory/gear_small/Object.usd
+    set: isaac_factory
+    origin: {project: "NVIDIA Isaac Lab Factory task USDs (Isaac Sim asset library, processed copies)", url: "https://github.com/isaac-sim/IsaacLab"}
+    license: see upstream project
+    size: 525963
+    sha256: 012412e078d5f4caf15bb6a1cd6dffcb7738dd7aff60249ed95864b3f3ce95bb
+    needed_by: [gear_mesh]
+    ship: true
+    upstream:
+      file: Isaac/IsaacLab/Factory/factory_gear_small.usd
+      processed: true
+  - path: objects/isaac_factory/gear_medium/Object.usd
+    set: isaac_factory
+    origin: {project: "NVIDIA Isaac Lab Factory task USDs (Isaac Sim asset library, processed copies)", url: "https://github.com/isaac-sim/IsaacLab"}
+    license: see upstream project
+    size: 519499
+    sha256: 70e23708f2bec44eeccbcd58834f374e6fbed0d1ae86a410e3c7b6a09b1e05d2
+    needed_by: [gear_mesh]
+    ship: true
+    upstream:
+      file: Isaac/IsaacLab/Factory/factory_gear_medium.usd
+      processed: true
+  - path: objects/isaac_factory/gear_medium/Annotation/grasp_pose.json
+    set: isaac_factory
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 2770
+    sha256: 049fc169e9a7218f818ff5634de6d65721c77df4cebec3d8309e680a373e8fe8
+    needed_by: [gear_mesh]
+    ship: true
+  - path: objects/isaac_factory/gear_medium/Annotation/insertion_pose.json
+    set: isaac_factory
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 154
+    sha256: ca62e006b0844b75608a8ae87c94473778e83adbe325c883494b51caf6a48047
+    needed_by: [gear_mesh]
+    ship: true
+  - path: objects/isaac_factory/gear_large/Object.usd
+    set: isaac_factory
+    origin: {project: "NVIDIA Isaac Lab Factory task USDs (Isaac Sim asset library, processed copies)", url: "https://github.com/isaac-sim/IsaacLab"}
+    license: see upstream project
+    size: 1035824
+    sha256: 61ef8c57d8188b4e9c556beab666de7783e1fbab69a1a0e9d592ba7365dc681c
+    needed_by: [gear_mesh]
+    ship: true
+    upstream:
+      file: Isaac/IsaacLab/Factory/factory_gear_large.usd
+      processed: true
+  - path: objects/isaac_factory/nut_m16/Object.usd
+    set: isaac_factory
+    origin: {project: "NVIDIA Isaac Lab Factory task USDs (Isaac Sim asset library, processed copies)", url: "https://github.com/isaac-sim/IsaacLab"}
+    license: see upstream project
+    size: 882987
+    sha256: 3c93ba48c49069314f26c38280941650f88d4104feb4af4c9894e97664bc534d
+    needed_by: [nut_thread]
+    ship: true
+    upstream:
+      file: Isaac/IsaacLab/Factory/factory_nut_m16_loose.usd
+      processed: true
+  - path: objects/isaac_factory/nut_m16/Annotation/grasp_pose.json
+    set: isaac_factory
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 884
+    sha256: 6ac7150e08cd9d23c50df30491adc6b03b090b3b86528a60a6795a557b8c3b20
+    needed_by: [nut_thread]
+    ship: true
+  - path: objects/isaac_factory/nut_m16/Annotation/insertion_pose.json
+    set: isaac_factory
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 126
+    sha256: 730e9b0a346140796d7e52153a47169d12bfc2d59622ce91b3da4a2e758c1aea
+    needed_by: [nut_thread]
+    ship: true
+  - path: objects/isaac_factory/bolt_m16/Object.usd
+    set: isaac_factory
+    origin: {project: "NVIDIA Isaac Lab Factory task USDs (Isaac Sim asset library, processed copies)", url: "https://github.com/isaac-sim/IsaacLab"}
+    license: see upstream project
+    size: 1242824
+    sha256: c5414d28fc39ea1a16f23bb256968c0fe2fc514ef06932972067c4ff9f4a9493
+    needed_by: [nut_thread]
+    ship: true
+    upstream:
+      file: Isaac/IsaacLab/Factory/factory_bolt_m16_loose.usd
+      processed: true
+  - path: objects/isaac_factory/bolt_m16/Annotation/insertion_pose.json
+    set: isaac_factory
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 300
+    sha256: d4d0d41b6c7cd3362f17eb90e01c1e10726940b9da60b29c431bf41d8942b77d
+    needed_by: [nut_thread]
+    ship: true
+  - path: objects/univtac/TestTube/Object.usd
+    set: univtac
+    origin: {project: "UniVTAC benchmark object meshes (insert_tube, insert_HDMI, lift), converted to USD", url: "https://github.com/univtac/UniVTAC"}
+    license: see upstream project
+    size: 38261
+    sha256: b3cfb7d79d47f244fad0076598555901b6525b38360dc3e937c486377768f22e
+    needed_by: [insert_tube]
+    ship: true
+  - path: objects/univtac/TestTube/Annotation/grasp_pose.json
+    set: univtac
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 48439
+    sha256: c3656e0556e6a334ca786eada99607871b079cd3c6a5b873f98999bf29a91520
+    needed_by: [insert_tube]
+    ship: true
+  - path: objects/univtac/TestTube/Annotation/insertion_pose.json
+    set: univtac
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 152
+    sha256: 19ac04b03f8f27d72c1026f2ad6992ceb84f1653ffb102345d0c75bd5c9f703f
+    needed_by: [insert_tube]
+    ship: true
+  - path: objects/univtac/TestTubeBase/Object.usd
+    set: univtac
+    origin: {project: "UniVTAC benchmark object meshes (insert_tube, insert_HDMI, lift), converted to USD", url: "https://github.com/univtac/UniVTAC"}
+    license: see upstream project
+    size: 37761
+    sha256: 752db5963aa36b8fedcd34f2bbf0e10e0cf6cf1438069d4dc4396c5724b8e3f5
+    needed_by: [insert_tube]
+    ship: true
+  - path: objects/univtac/TestTubeBase/Annotation/insertion_pose.json
+    set: univtac
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 134
+    sha256: f06cd07b090b2e4ff285c76d09d4ec18a2f7387b236066dbf75f7535de07f328
+    needed_by: [insert_tube]
+    ship: true
+  - path: objects/univtac/TestTubeSlot/Object.usd
+    set: univtac
+    origin: {project: "UniVTAC benchmark object meshes (insert_tube, insert_HDMI, lift), converted to USD", url: "https://github.com/univtac/UniVTAC"}
+    license: see upstream project
+    size: 38969
+    sha256: 934cf4ce137f45f84a3eb140c0929f90dea553b1d8a2b63b784281e470a77c95
+    needed_by: [insert_tube]
+    ship: true
+  - path: objects/univtac/TestTubeSlot/Annotation/insertion_pose.json
+    set: univtac
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 203
+    sha256: c991cedbe83181f11b9af8f3f92ad6997d63a7a9632e11fb6a2e71da0332f484
+    needed_by: [insert_tube]
+    ship: true
+  - path: objects/univtac/HDMI/Object.usd
+    set: univtac
+    origin: {project: "UniVTAC benchmark object meshes (insert_tube, insert_HDMI, lift), converted to USD", url: "https://github.com/univtac/UniVTAC"}
+    license: see upstream project
+    size: 19552
+    sha256: 21ad58b1ccd66fd1e1015d1f5258081991de2108a852b2bc3aefe23b7a0ddd10
+    needed_by: [insert_hdmi]
+    ship: true
+  - path: objects/univtac/HDMI/Annotation/grasp_pose.json
+    set: univtac
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 3347
+    sha256: 1f7ddea1b499ef7d68cc3b8496104267947d733404c4824b069ec273390daec4
+    needed_by: [insert_hdmi]
+    ship: true
+  - path: objects/univtac/HDMI/Annotation/insertion_pose.json
+    set: univtac
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 162
+    sha256: bca6a5ea56219197f4e09505fb3f2dd4f9ad3069acc1fb545290eb78ee8d5e0c
+    needed_by: [insert_hdmi]
+    ship: true
+  - path: objects/univtac/HDMISlot/Object.usd
+    set: univtac
+    origin: {project: "UniVTAC benchmark object meshes (insert_tube, insert_HDMI, lift), converted to USD", url: "https://github.com/univtac/UniVTAC"}
+    license: see upstream project
+    size: 7779
+    sha256: 663fbac394dde2ea8252061fe69b63b43203ad12069812f372f6925667b2081a
+    needed_by: [insert_hdmi]
+    ship: true
+  - path: objects/univtac/HDMISlot/Annotation/insertion_pose.json
+    set: univtac
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 210
+    sha256: 2abd7141ec361b200c5437c462e417cbd405ea8b490cd6f861bfce2e4f62a340
+    needed_by: [insert_hdmi]
+    ship: true
+  - path: objects/univtac/BottleCradle/Object.usd
+    set: univtac
+    origin: {project: "UniVTAC benchmark object meshes (insert_tube, insert_HDMI, lift), converted to USD", url: "https://github.com/univtac/UniVTAC"}
+    license: see upstream project
+    size: 1119
+    sha256: c3116cf0cb4fd6f350fd35a675ef140c114467c0b7e43468c020e49de1f88cf2
+    needed_by: [lift]
+    ship: true
+  - path: objects/bottle/bottle_5_xtrainer/Object.usd
+    set: bottle
+    origin: {project: "bottle_5 mesh of the upstream simulator's object library, re-exported for the X-Trainer grasp", url: null}
+    license: see upstream project
+    size: 45465
+    sha256: e6e3e762d73ac32760486640e8d4f7e4bd673c228d4cd48335d8eb6c904d2a98
+    needed_by: [lift]
+    ship: true
+  - path: objects/bottle/bottle_5_xtrainer/Annotation/grasp_pose.json
+    set: bottle
+    origin: {project: gsmini_tasks (this package), url: null}
+    license: same as package
+    size: 1162
+    sha256: 97db332b7ecf7cf57a70f56c8dcf20b46705a0d1512a7ed06e4ddac35742348c
+    needed_by: [lift]
+    ship: true
+  - path: hdri/noon_grass_4k.hdr
+    set: hdri
+    origin: {project: Poly Haven HDRIs, url: "https://polyhaven.com/hdris"}
+    license: CC0 (Poly Haven; see upstream page)
+    size: 25306463
+    sha256: 394859fe31e374233f44260f8c09137a47b34e0bffd420237a0baa82ca640583
+    needed_by: [one_leg, square_table, lamp_bulb, drawer_container, gear_mesh, nut_thread, insert_tube, insert_hdmi, lift, handover]
+    ship: true
+    upstream:
+      page: "https://polyhaven.com/a/noon_grass"
+      url: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/4k/noon_grass_4k.hdr"
+      verify: loose
+  - path: hdri/photo_studio_01_4k.hdr
+    set: hdri
+    origin: {project: Poly Haven HDRIs, url: "https://polyhaven.com/hdris"}
+    license: CC0 (Poly Haven; see upstream page)
+    size: 25393729
+    sha256: b6bb7ed3522747f65ffbf50975054727d46516bc24dba98f8a5cd581b1341f28
+    needed_by: [dough_target_shape, dough_press_thickness, dough_fill_tray, fem_plug_insert, cloth_edge_feed, cloth_fold_half, cable_needle_thread, cable_slack_reduce, cable_route_channel, sleeve_pull_on_forearm]
+    ship: true
+    upstream:
+      page: "https://polyhaven.com/a/photo_studio_01"
+      url: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/4k/photo_studio_01_4k.hdr"
+      verify: loose

@@ -1,0 +1,13 @@
+# GelSight Mini Taxim calibration (640x480).
+# Provenance: the GelSight Mini calibration set distributed with TacEx (https://github.com/DH-Ng/TacEx,
+# tacex_assets/data/Sensors/GelSight_Mini/calibs/640x480: 0.png, dataPack.npz, gelmap.npy, polycalib.npz,
+# shadowTable.npz are byte-identical to that repository); params.json carries this package's sensor parameters.
+# TacEx declares the MIT licence in its README (no separate licence file at the time of packaging); the Taxim
+# rendering code is MIT as well (CMU RoboTouch, see ../../LICENSE_TAXIM_MIT.txt).
+# sha256  size_bytes  file
+d8ebecae53a80b98f9aa979f2da6654e15a12467214d56ecc125babaa3b8e30a  385704  0.png
+a728d126e6c6bea277ad2511c459af2f684829143be9d9d9cfce49932a169bc1  23041414  dataPack.npz
+410054cb740feea28d73924eba71f057e709cc801ab800e62d3f80f019f1a31b  2457728  gelmap.npy
+4c3938fbf444a804c904075d7c7a247da5be4193f103bffae3e8347e545d8b0b  1124  params.json
+596341551a4eb3927b19d14bc1a3fe5e5ff5ac95207b8064c090442e1e294b56  2250998  polycalib.npz
+6816caae94dfc05ab2f6001914e51a30d89ce050dff2e726c2456e0636304e32  939288  shadowTable.npz

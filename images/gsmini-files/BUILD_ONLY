@@ -1,0 +1,3 @@
+BUILD_ONLY: the gsmini-files image carries third-party assets (FurnitureBench, Isaac Lab Factory, UniVTAC meshes) under their own licences and stays in the private package.
+Every gsmini task's Dockerfile starts with this recipe (images/gsmini/Dockerfile, copied in by scripts/task_conventions.py
+normalize), so a runner that cannot pull a prebuilt copy builds the same layers from public sources.
