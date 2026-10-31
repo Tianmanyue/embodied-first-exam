@@ -43,8 +43,8 @@ s.status()                         # {'success': bool, 'sim_steps': int, 'resets
 s.replay(actions)                  # resets, replays open-loop, holds the last row 60 steps, returns status
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 ```
-Cameras (two wrist cameras): `Session(..., cameras=True)` then `s.render_frame("wrist_right_rgb")` /
-`s.render_frame("wrist_left_rgb")` (slower: every step renders). The scene, robot and object files are under
+Cameras (two wrist cameras, 640x480, and a fixed head camera, 1440x1080): `Session(..., cameras=True)` then
+`s.render_frame("wrist_right_rgb")` / `s.render_frame("wrist_left_rgb")` / `s.render_frame("head_rgb")` (slower: every step renders). The scene, robot and object files are under
 `/opt/gsmini/gsmini_tasks/` (task logic in `rigid/task.py`, this task's scene in `tasks/dough_fill_tray/cfg.yaml`); each
 object's `Annotation/` folder holds grasp poses (`grasp_pose.json`: right end-effector poses `[x, y, z, qw, qx, qy, qz]` in
 the object's frame) and insertion geometry (`insertion_pose.json`).

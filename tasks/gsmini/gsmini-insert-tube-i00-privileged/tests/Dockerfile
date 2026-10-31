@@ -61,9 +61,9 @@ WORKDIR /app
 # the declared artifacts (/app/output/).
 FROM gsmini-base
 COPY grade.py instance.json test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe-private:gsmini-files-0.1.0@sha256:dfe9a3b71105edf808c72474b759c77b08853af0b71487287fdd2c696c7fc141 /gsmini_tasks /opt/gsmini/gsmini_tasks
-COPY --from=ghcr.io/mll-lab-nu/efe-private:gsmini-files-0.1.0@sha256:dfe9a3b71105edf808c72474b759c77b08853af0b71487287fdd2c696c7fc141 /sidecar /opt/gsmini/sidecar
-COPY --from=ghcr.io/mll-lab-nu/efe-private:gsmini-files-0.1.0@sha256:dfe9a3b71105edf808c72474b759c77b08853af0b71487287fdd2c696c7fc141 /rcb_gsmini.py /tests/rcb_gsmini.py
+COPY --from=ghcr.io/mll-lab-nu/efe-private:gsmini-files-0.1.0@sha256:9c9a4ee3dd20b464ab346df6fd8a815958bdf23e64469121fd1f740cdab0502e /gsmini_tasks /opt/gsmini/gsmini_tasks
+COPY --from=ghcr.io/mll-lab-nu/efe-private:gsmini-files-0.1.0@sha256:9c9a4ee3dd20b464ab346df6fd8a815958bdf23e64469121fd1f740cdab0502e /sidecar /opt/gsmini/sidecar
+COPY --from=ghcr.io/mll-lab-nu/efe-private:gsmini-files-0.1.0@sha256:9c9a4ee3dd20b464ab346df6fd8a815958bdf23e64469121fd1f740cdab0502e /rcb_gsmini.py /tests/rcb_gsmini.py
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests:/opt/gsmini
 WORKDIR /tests

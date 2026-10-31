@@ -291,7 +291,15 @@ class Session:
 
     def _frame(self) -> np.ndarray:
         obs = self.task.get_observation()["policy"]
-        return np.concatenate([np.asarray(obs["wrist_right_rgb"]), np.asarray(obs["wrist_left_rgb"])], axis=1)
+        wrists = np.concatenate([np.asarray(obs["wrist_right_rgb"]), np.asarray(obs["wrist_left_rgb"])], axis=1)
+        if "head_rgb" not in obs:
+            return wrists
+        from PIL import Image  # the head view on top, scaled to the width of the two wrist views
+
+        head = np.asarray(obs["head_rgb"])
+        w = wrists.shape[1]
+        head = np.asarray(Image.fromarray(head).resize((w, round(head.shape[0] * w / head.shape[1])), Image.BILINEAR))
+        return np.concatenate([head, wrists], axis=0)
 
     def replay(self, actions: np.ndarray, settle: bool = True, video: str | None = None, fps: int = 15) -> dict[str, Any]:
         """Resets (unless nothing has run since the first reset of the process: then the replay is that first episode,

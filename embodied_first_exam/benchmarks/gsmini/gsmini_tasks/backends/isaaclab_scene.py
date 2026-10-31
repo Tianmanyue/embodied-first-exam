@@ -1,4 +1,4 @@
-"""Isaac Lab scene: simulation context, table, robot, rigid objects and two wrist cameras.
+"""Isaac Lab scene: simulation context, table, robot, rigid objects, two wrist cameras and a head camera.
 
 No ``ManagerBasedEnv``: :class:`IsaacLabScene` drives ``SimulationContext.step``
 directly so a :class:`gsmini_tasks.core.task.Task` can drop into any stack.
@@ -11,7 +11,7 @@ Typical use::
     scene = IsaacLabScene(SceneCfg(objects=[ObjectCfg("cube", shape="cuboid", dims=(0.04,)*3, pos=(0, 0, 1.13))]))
     scene.build()
     scene.step(action)            # one control tick = 2 physics substeps, IK each substep
-    rgb = scene.render_cameras()  # {"wrist_right_rgb": (480, 640, 3) uint8, "wrist_left_rgb": ...}
+    rgb = scene.render_cameras()  # {"wrist_right_rgb": (480, 640, 3) uint8, "wrist_left_rgb": ..., "head_rgb": (1080, 1440, 3)}
 
 Timing: physics dt 1/120, decimation 2 (60 Hz control).
 """
@@ -38,11 +38,21 @@ from .robot import RobotCfg, XTrainerGsmini
 # ----------------------------------------------------------------------------- wrist cameras
 WRIST_CAM_RIGHT_POS = (-0.00896, -0.05315, 0.06515)
 WRIST_CAM_RIGHT_ORI_DEG = (142.66, 0.97, -0.79)
-"""Right wrist camera under ``J1_6``: local position (m) and extrinsic XYZ Euler angles (deg),
-USD camera convention (looks along its -Z, +Y up)."""
-WRIST_CAM_FOCAL = 1.277
+"""Right wrist camera under ``J1_6``: local position (m) and intrinsic XYZ Euler angles (deg) as MagicSim writes camera
+poses (see :func:`camera_quat`), USD camera convention (looks along its -Z, +Y up)."""
+WRIST_CAM_FOCAL = 12.77
+"""USD focal length (mm) of the calibrated left-wrist D405 (MagicSim configs write it as 1.277: MagicSim scales by 10)."""
 WRIST_CAM_APERTURE = 20.955
 WRIST_CAM_RES = (640, 480)
+
+
+def camera_quat(ori_deg) -> np.ndarray:
+    """Quaternion (wxyz) of MagicSim camera Euler angles: intrinsic XYZ, ``R = Rx(a) Ry(b) Rz(c)``."""
+    a, b, c = np.deg2rad(np.asarray(ori_deg, dtype=np.float64).reshape(3))
+    qx = m.quat_from_axis_angle([1.0, 0.0, 0.0], a)
+    qy = m.quat_from_axis_angle([0.0, 1.0, 0.0], b)
+    qz = m.quat_from_axis_angle([0.0, 0.0, 1.0], c)
+    return m.quat_normalize(m.quat_mul(qx, m.quat_mul(qy, qz)))
 
 
 def left_wrist_mount(pos=WRIST_CAM_RIGHT_POS, ori_deg=WRIST_CAM_RIGHT_ORI_DEG) -> Tuple[Tuple[float, float, float], np.ndarray]:
@@ -55,8 +65,17 @@ def left_wrist_mount(pos=WRIST_CAM_RIGHT_POS, ori_deg=WRIST_CAM_RIGHT_ORI_DEG) -
     """
     rz = m.quat_from_euler_xyz_deg([0.0, 0.0, 180.0])
     p = m.quat_rotate(rz, np.asarray(pos, dtype=np.float64))
-    q = m.quat_mul(rz, m.quat_from_euler_xyz_deg(ori_deg))
+    q = m.quat_mul(rz, camera_quat(ori_deg))
     return (float(p[0]), float(p[1]), float(p[2])), q
+
+
+# ----------------------------------------------------------------------------- head camera
+HEAD_CAM_POS = (-0.0644, 0.5236, 1.4873)
+HEAD_CAM_ORI_DEG = (-71.37, 1.26, 178.01)
+"""Head camera (Kinect pose of the collected data) in the env frame: position (m) and intrinsic XYZ Euler angles (deg,
+:func:`camera_quat`), USD camera convention."""
+HEAD_CAM_FOCAL = 13.283
+HEAD_CAM_RES = (1440, 1080)
 
 
 # ----------------------------------------------------------------------------- configs
@@ -89,6 +108,8 @@ class SceneCfg:
     objects: List[ObjectCfg] = field(default_factory=list)
     cameras: bool = True
     camera_res: Tuple[int, int] = WRIST_CAM_RES
+    head_camera: bool = True
+    head_camera_res: Tuple[int, int] = HEAD_CAM_RES
     desk: bool = True
     desk_size: Tuple[float, float] = (1.2, 0.9)
     desk_center_xy: Tuple[float, float] = (-0.05, 0.0)
@@ -241,7 +262,7 @@ class IsaacLabScene:
         from isaaclab.sensors import Camera, CameraCfg
 
         w, h = self.cfg.camera_res
-        right_q = m.quat_from_euler_xyz_deg(WRIST_CAM_RIGHT_ORI_DEG)
+        right_q = camera_quat(WRIST_CAM_RIGHT_ORI_DEG)
         left_pos, left_q = left_wrist_mount()
         mounts = {
             "wrist_right": ("J1_6", WRIST_CAM_RIGHT_POS, right_q),
@@ -258,6 +279,19 @@ class IsaacLabScene:
                 update_period=0.0,
             )
             self.cameras[name] = Camera(cam_cfg)
+        if self.cfg.head_camera:
+            w, h = self.cfg.head_camera_res
+            self.cameras["head"] = Camera(
+                CameraCfg(
+                    prim_path="/World/head_cam",
+                    offset=CameraCfg.OffsetCfg(pos=HEAD_CAM_POS, rot=tuple(float(x) for x in camera_quat(HEAD_CAM_ORI_DEG)), convention="opengl"),
+                    spawn=sim_utils.PinholeCameraCfg(focal_length=HEAD_CAM_FOCAL, horizontal_aperture=WRIST_CAM_APERTURE, clipping_range=(0.01, 100.0)),
+                    width=w,
+                    height=h,
+                    data_types=["rgb"],
+                    update_period=0.0,
+                )
+            )
 
     def _settle(self, ticks: int) -> None:
         for _ in range(ticks):
@@ -291,7 +325,7 @@ class IsaacLabScene:
         self.tick += 1
 
     def render_cameras(self) -> Dict[str, np.ndarray]:
-        """Render once and return ``{"wrist_right_rgb", "wrist_left_rgb"}`` as (H, W, 3) uint8."""
+        """Render once and return ``{"wrist_right_rgb", "wrist_left_rgb", "head_rgb"}`` as (H, W, 3) uint8."""
         out: Dict[str, np.ndarray] = {}
         if not self.cameras:
             return out
@@ -385,4 +419,4 @@ class IsaacLabScene:
                 pass
 
 
-__all__ = ["IsaacLabScene", "SceneCfg", "ObjectCfg", "launch_app", "left_wrist_mount", "WRIST_CAM_RIGHT_POS", "WRIST_CAM_RIGHT_ORI_DEG"]
+__all__ = ["IsaacLabScene", "SceneCfg", "ObjectCfg", "launch_app", "left_wrist_mount", "camera_quat", "HEAD_CAM_POS", "HEAD_CAM_ORI_DEG", "WRIST_CAM_RIGHT_POS", "WRIST_CAM_RIGHT_ORI_DEG"]
